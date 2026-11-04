@@ -52,12 +52,12 @@ body[data-screen="home"] #bg,body[data-screen="game"] #bg{display:none}
 .brand{text-align:center;margin-bottom:16px}
 /* Game title artwork (assets/title.png). The cafe logo stays, smaller, where the title leads. */
 .gameTitle{display:block;height:auto;margin:0 auto;filter:drop-shadow(0 6px 14px rgba(31,58,95,.22))}
-#s-name .brand .gameTitle{width:min(82vw,330px);margin:-6px auto 2px}
-#s-name .brand .logo img{width:84px;margin-bottom:6px}
+#s-name .brand .gameTitle{width:min(82vw,330px);margin:4px auto 2px}
+#s-name .brand .logo img{width:58px;margin-bottom:14px}
 #s-name h1{display:none}
 #homeTitle{position:absolute;top:calc(var(--sat) + 78px);left:50%;transform:translateX(-50%);width:min(76vw,320px);z-index:1}
 #hudTitle{position:absolute;top:calc(var(--sat) + 10px);left:50%;transform:translateX(-50%);width:124px;max-width:calc(100vw - 236px);filter:drop-shadow(0 4px 10px rgba(31,58,95,.25))}
-@media (max-height:620px){#s-name .brand .gameTitle{width:220px}#s-name .brand .logo img{width:60px}}
+@media (max-height:620px){#s-name .brand .gameTitle{width:220px}#s-name .brand .logo img{width:44px;margin-bottom:8px}}
 .logo{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
 .logo img{width:150px;height:auto;display:block}
 .brand.small .logo img{width:120px}
@@ -880,7 +880,7 @@ function skyAt(a){
 }
 /* Draw the cafe so its table top sits at tableY0 (+cam). The photo scrolls away with the camera; above its roofline the sky
    takes over and darkens with altitude until it is outer space. Returns the screen y of the photo's top edge. */
-function drawCafe(ctx,tableY0,cam,fade){
+function drawCafe(ctx,tableY0,cam,fade,logo){
   const s=SPR.cafe,ok=!!(s&&s.ok);
   const scale=ok?Math.max(W/s.w,tableY0/(TABLE_FRAC*s.h))*1.03:1,dw=ok?s.w*scale:W,dh=ok?s.h*scale:tableY0/TABLE_FRAC;
   const top=tableY0+cam-TABLE_FRAC*dh,left=(W-dw)/2;
@@ -890,6 +890,9 @@ function drawCafe(ctx,tableY0,cam,fade){
     ctx.fillStyle=g;ctx.fillRect(-20,-20,W+40,top+21);
   }
   if(ok)ctx.drawImage(s.src,left,top,dw,dh);
+  if(ok&&logo&&SPR.logo&&SPR.logo.ok){ // the store sign on the back wall (the photo itself has none), with a soft glow
+    const L=SPR.logo,lw=dw*0.27,lh=lw*L.h/L.w,lx=left+dw/2-lw/2,ly=top+dh*0.215;
+    ctx.save();ctx.shadowColor='rgba(255,246,220,.95)';ctx.shadowBlur=lw*0.12;ctx.drawImage(L.src,lx,ly,lw,lh);ctx.restore();}
   if(ok&&fade){ // soften the roofline: the top of the photo dissolves into the sky
     const fh=Math.min(dh*0.26,H*0.34),g2=ctx.createLinearGradient(0,top,0,top+fh);g2.addColorStop(0,'rgba(232,243,255,1)');g2.addColorStop(0.45,'rgba(232,243,255,.55)');g2.addColorStop(1,'rgba(232,243,255,0)');
     ctx.fillStyle=g2;ctx.fillRect(left-1,top,dw+2,fh);}
@@ -1312,7 +1315,7 @@ function drawGame(){
   const dx=REDUCED?0:Math.sin(t*0.6)*3,dy=REDUCED?0:Math.cos(t*0.8)*2;
   x.save();x.translate(dx,dy);
   // photo, then the sky above its roofline. Altitude (screen heights above the roof, at mid-screen) drives the glow and the stars.
-  const photoTop=drawCafe(x,G.baseY,G.cam,true);
+  const photoTop=drawCafe(x,G.baseY,G.cam,true,true);
   const alt=(photoTop-H*0.5)/H,golden=Math.exp(-Math.pow(alt-2.6,2)/0.9),night=clamp((alt-4.2)/2.5,0,1);
   if(photoTop>0){for(const s of G.stars){const yy=s.y*H;if(yy>photoTop)continue;const a=clamp(((photoTop-yy)/H-4.6)/2,0,1);if(a<=0)continue;
     const tw=0.6+0.4*Math.sin(t*2+s.ph);x.fillStyle='rgba(255,255,255,'+(a*tw).toFixed(2)+')';x.beginPath();x.arc(s.x*W,yy,s.s,0,TAU);x.fill();}}
