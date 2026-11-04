@@ -137,9 +137,12 @@ input.code{letter-spacing:.35em;text-transform:uppercase;text-align:center;font-
 /* ---------- Panels (rewards, drops, share) ---------- */
 .panel{position:fixed;inset:0;z-index:6;background:rgba(34,48,74,.5);display:none;align-items:flex-end;justify-content:center;padding:calc(var(--sat) + 10px) 0 0}
 .panel.show{display:flex}
-.sheet{background:var(--paper);border-radius:26px 26px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:22px 20px calc(var(--sab) + 26px);box-shadow:0 -10px 40px rgba(31,58,95,.25)}
-.sheet h2{display:flex;justify-content:space-between;align-items:center}
-.x{background:none;border:0;color:var(--ink2);font-size:30px;line-height:1;cursor:pointer;padding:2px 8px}
+.sheet{background:var(--paper);border-radius:26px 26px 0 0;width:100%;max-width:520px;max-height:92%;display:flex;flex-direction:column;overflow:hidden;padding:0;box-shadow:0 -10px 40px rgba(31,58,95,.25)}
+/* header stays put so the close button is never scrolled under the browser bar */
+.sheet h2{flex:none;display:flex;justify-content:space-between;align-items:center;margin:0;padding:14px 14px 10px 20px;border-bottom:1px solid var(--line);background:var(--paper)}
+.sheetBody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 20px calc(var(--sab) + 26px)}
+.x{width:40px;height:40px;border-radius:50%;background:var(--sky);border:0;color:var(--sapphire);font-size:26px;line-height:1;cursor:pointer;padding:0 0 3px;display:flex;align-items:center;justify-content:center;flex:none}
+.x:active{background:#c7dcfb}
 .dropOpt{display:flex;align-items:center;gap:14px;padding:12px;border-radius:18px;border:2px solid var(--line);margin-top:12px;cursor:pointer;background:#fff;width:100%;text-align:left;color:var(--ink)}
 .dropOpt.on{border-color:var(--sapphire);background:var(--sky)}
 .dropOpt img,.dropOpt .ph{width:64px;height:64px;border-radius:14px;object-fit:contain;background:#fff;padding:4px;border:2px solid var(--line);flex:none}
@@ -296,6 +299,12 @@ input.small,select.small{font-size:15px;font-weight:600;padding:9px 10px;border-
 .form label{margin:10px 0 4px;font-size:13px}
 .btn.sm{padding:9px 14px;font-size:14px;width:auto;margin-top:0}
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.runs{list-style:none;margin:0;padding:0}
+.runs li{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.runs .nm{flex:1;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.runs .when{color:var(--ink2);font-size:12px;white-space:nowrap}
+.runs .sc{font-weight:800;color:var(--sapphire)}.runs .sc small{font-weight:600;color:var(--ink2);margin-left:3px;font-size:11px}
+.runs .tag{background:var(--canary);color:var(--ink);font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px}
 .kpi div{background:var(--sky);border-radius:14px;padding:10px 6px;text-align:center}
 .kpi b{font-size:22px;font-weight:800;display:block;color:var(--sapphire)}
 .kpi span{font-size:12px;font-weight:700;color:var(--ink2)}
@@ -448,6 +457,12 @@ body[data-screen="admin"] .saveBar{display:block}
   </div>
 
   <div class="aCard">
+    <h2>Latest runs <span class="pillTag" id="runsTag">Live</span></h2>
+    <p class="muted" style="margin:0 0 6px;font-size:13px">Recorded in Supabase as players finish a run.</p>
+    <div id="adminRuns"></div>
+  </div>
+
+  <div class="aCard">
     <h2>Promos and drops <button class="btn sm" id="adminNewDrop">+ New drop</button></h2>
     <div class="dropRow"><img data-asset="croissant" alt=""><div class="ph">Pastry</div><div class="info"><b>Free pastry</b><small>Default promo · 20 cups in one run · Runs whenever no drop is live</small></div><span class="pillTag" data-drop-tag="pastry">Default</span><button class="sw" data-drop-sw="pastry" role="switch" aria-label="Free pastry promo"></button></div>
     <div class="dropRow"><img data-asset="matcha" alt=""><div class="ph">Matcha</div><div class="info"><b>Matcha Latte</b><small>New product · 10th item · Nov 3 – Nov 16</small></div><span class="pillTag" data-drop-tag="matcha">Scheduled</span><button class="sw" data-drop-sw="matcha" role="switch" aria-label="Matcha Latte drop"></button></div>
@@ -531,6 +546,48 @@ function plural(n,one,many){return n+' '+(n===1?one:many);}
 let userTapped=false;window.addEventListener('pointerdown',()=>{userTapped=true;},{once:true});window.addEventListener('keydown',()=>{userTapped=true;},{once:true});
 function vibrate(p){try{if(userTapped&&navigator.vibrate&&!REDUCED)navigator.vibrate(p);}catch(e){}}
 const session={name:'',ticket:'',codesThisRun:[]};
+
+/* ---------- Cloud sync (Supabase, prototype level) ----------
+   Every finished run is inserted into public.runs with the anon key (schema in supabase/schema.sql).
+   The weekly board merges the best cup count per player from the cloud, and the admin page lists the latest runs.
+   Leave key empty (or open from file://) and everything stays local. ---------- */
+const SUPA={url:'https://wzjgubcojszfnaxdntel.supabase.co',key:''};
+const CLIENT_ID=(()=>{let id=store.get('ms_client','');if(typeof id!=='string'||!id){id=Math.random().toString(36).slice(2,10)+Date.now().toString(36);store.set('ms_client',id);}return id;})();
+function supaOn(){return !!(SUPA.url&&SUPA.key&&location.protocol!=='file:');}
+async function supa(path,method,body){
+  if(!supaOn())return null;
+  const r=await fetch(SUPA.url+'/rest/v1/'+path,{method:method||'GET',body:body?JSON.stringify(body):undefined,
+    headers:{apikey:SUPA.key,Authorization:'Bearer '+SUPA.key,'Content-Type':'application/json',Prefer:'return=minimal'}});
+  if(!r.ok)throw new Error('supabase '+r.status);
+  return r.status===204?null:r.json();
+}
+function recordRun(){
+  return supa('runs','POST',{client_id:CLIENT_ID,player:session.name,cups:G.cups,score:G.score,streak:G.bestStreak,passed:G.passedCount,
+    promo:activePromo(),codes:session.codesThisRun.map(r=>r.code),week:weekKey()}).catch(()=>{});
+}
+let syncing=false;
+async function syncBoard(){
+  if(!supaOn()||syncing)return;syncing=true;
+  try{
+    const rows=await supa('runs?select=player,cups,score&week=eq.'+encodeURIComponent(weekKey())+'&order=cups.desc,score.desc&limit=60');
+    if(!Array.isArray(rows))return;
+    rows.forEach(r=>{if(r.player&&typeof r.cups==='number')submitScore(r.player,r.cups,r.score||0);});
+    const scr=document.body.dataset.screen;
+    if(scr==='home')renderBoard($('homeBoard'),session.name);
+    if(scr==='over')renderBoard($('overBoard'),session.name);
+  }catch(e){}finally{syncing=false;}
+}
+async function renderAdminRuns(){
+  const el=$('adminRuns'),tag=$('runsTag');
+  if(!supaOn()){el.innerHTML='<p class="empty">Not connected. Add the Supabase publishable key in index.html and run supabase/schema.sql.</p>';tag.textContent='Offline';return;}
+  el.innerHTML='<p class="empty">Loading…</p>';
+  try{
+    const rows=await supa('runs?select=player,cups,score,promo,codes,created_at&order=created_at.desc&limit=12');
+    const f=d=>new Date(d).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    el.innerHTML=rows.length?'<ol class="runs">'+rows.map(r=>`<li>${avatarHTML(r.player)}<span class="nm">${escapeHtml(r.player)}</span><span class="when">${f(r.created_at)}</span><span class="sc">${r.cups}<small>cups</small></span>${r.codes&&r.codes.length?'<span class="tag">code</span>':''}</li>`).join('')+'</ol>':'<p class="empty">No runs recorded yet.</p>';
+    tag.textContent='Live';
+  }catch(e){el.innerHTML='<p class="empty">Could not reach the database.</p>';tag.textContent='Error';}
+}
 
 /* ---------- Tiny synth (no audio files). The context wakes on the first tap. ---------- */
 let AC=null;
@@ -667,8 +724,8 @@ function mountQRs(container){
   });
 }
 const DROPS={
-  matcha:{key:'matcha',title:'Matcha Latte',short:'Matcha Latte',sub:'New on the menu',prefix:'MS-MATCHA',label:'Free Matcha Latte',alert:'New drop alert: Matcha Latte. Land the matcha on your 10th stack and get it for free.'},
-  plushie:{key:'plushie',title:'Mainstay cup plush keychain',short:'Cup plushie',sub:'Limited edition merch',prefix:'MS-PLUSH',label:'Free cup plushie',alert:'New drop alert: Mainstay cup plush keychain. Land the plushie on your 10th stack and get it for free.'}
+  matcha:{key:'matcha',title:'Matcha Latte',short:'Matcha Latte',sub:'New on the menu',prefix:'MS-MATCHA',label:'Free Matcha Latte',alert:'Matcha Latte is new on the menu. Land it on your 10th stack and get it for free.'},
+  plushie:{key:'plushie',title:'Mainstay cup plush keychain',short:'Cup plushie',sub:'Limited edition merch',prefix:'MS-PLUSH',label:'Free cup plushie',alert:'Limited edition Mainstay cup plush keychain. Land it on your 10th stack and get it for free.'}
 };
 const PASTRY_PROMO={key:'pastry',title:'Free pastry',sub:'Stack 20 cups in one run',alert:'Stack 20 cups in one run and your next pastry is on the house.'};
 /* One promo at a time: the free pastry (default) or a single drop. Never both. */
@@ -851,6 +908,8 @@ function showScreen(id){
 function openPanel(id){$(id).classList.add('show');}
 function closePanel(id){$(id).classList.remove('show');}
 document.querySelectorAll('.x[data-close]').forEach(b=>b.addEventListener('click',()=>closePanel(b.dataset.close)));
+// everything under the sheet title scrolls inside .sheetBody; the title row (with the close button) stays fixed
+document.querySelectorAll('.sheet').forEach(sh=>{const b=document.createElement('div');b.className='sheetBody';while(sh.children.length>1)b.appendChild(sh.children[1]);sh.appendChild(b);});
 document.querySelectorAll('.panel').forEach(p=>p.addEventListener('click',e=>{if(e.target===p)closePanel(p.id);}));
 
 /* ---------- 1. Name ---------- */
@@ -891,7 +950,7 @@ function renderHomeDrop(){
   el.classList.add('show');
 }
 function goHome(){
-  $('homeTicket').textContent=session.ticket;$('homeWeek').textContent=weekRange();renderBoard($('homeBoard'),session.name);renderHomeDrop();
+  $('homeTicket').textContent=session.ticket;$('homeWeek').textContent=weekRange();renderBoard($('homeBoard'),session.name);renderHomeDrop();syncBoard();
   startHome();showScreen('s-home');
 }
 $('playBtn').addEventListener('click',()=>{
@@ -1126,7 +1185,7 @@ function startTopple(k,msg){
 }
 function endGame(delay){G.state='ending';G.endIn=delay;}
 function finishRun(){
-  G.state='done';rainStop();SFX.end();submitScore(session.name,G.cups,G.score);addPoints(G.score);
+  G.state='done';rainStop();SFX.end();submitScore(session.name,G.cups,G.score);addPoints(G.score);recordRun().then(syncBoard);
   const rank=rankOf(session.name,G.cups);SHARE.run=captureRun(rank);
   $('overCups').textContent=G.cups;$('overCaption').textContent=plural(G.score,'point','points')+' · '+session.name;
   $('stScore').textContent=G.score;$('stStreak').textContent=G.bestStreak;$('stPassed').textContent=G.passedCount;$('stRank').textContent='#'+rank;
@@ -1534,7 +1593,7 @@ function openAdmin(){
   const cur=activePromo();
   document.querySelectorAll('[data-drop-sw]').forEach(b=>b.classList.toggle('on',b.dataset.dropSw===cur));
   document.querySelectorAll('[data-drop-tag]').forEach(t=>{const k=t.dataset.dropTag,live=k===cur;t.textContent=live?'Live now':k==='pastry'?'Default':'Scheduled';t.classList.toggle('live',live);});
-  $('adminWeek').textContent=weekRange();
+  $('adminWeek').textContent=weekRange();renderAdminRuns();
   showScreen('s-admin');
 }
 $('adminLink').addEventListener('click',openAdmin);

@@ -37,11 +37,19 @@ Then open http://localhost:8765.
 
 - The cafe photo stands in for the live camera. Game objects are drawn over it.
 - Any new play code is valid. Used codes are remembered in this browser.
-- Rewards, the weekly board and the active drop live in localStorage.
+- Rewards, the weekly board and the active drop live in localStorage. Finished runs are also written to a Supabase table when the key is set (see below), and the board merges the week's best cups per player from it.
 - Sharing downloads the GIF and shows a confirmation. On phones that support file sharing, the system share sheet opens instead.
 - The admin page is clickable only. Nothing it shows is saved or applied.
 - Leaderboard faces are generated from each name, so there is nothing to upload.
 - All sound is synthesised in the browser (drops, rain, birds, thunder, start, end and prize fanfares). It starts after the first tap.
+
+## Database (Supabase, prototype level)
+
+One table, `runs`, records every finished run (player, cups, score, streak, promo, codes, week). The admin page lists the latest runs, and the Stack Leaderboard merges the week's best cup count per player, so phones see each other.
+
+1. In the Supabase project, open the SQL editor and run `supabase/schema.sql` once. It creates the table and lets the public key insert and read rows, nothing else.
+2. Copy the project's publishable (anon) key from Settings → API keys into `SUPA.key` near the top of the script in `index.html`.
+3. Publish. With the key empty, or when the file is opened from disk, the game stays fully local.
 
 ## Files
 
