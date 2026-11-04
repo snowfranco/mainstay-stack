@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#FFFBF2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%231F3A5F%27/%3E%3Cpath d=%27M8 9h16l-2 15H10z%27 fill=%27%23F3E9D7%27/%3E%3Crect x=%277%27 y=%276%27 width=%2718%27 height=%274%27 rx=%271.5%27 fill=%27%23B8893B%27/%3E%3C/svg%3E">
+<title>Mainstay Stack · Mainstay Cafe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ============================================================
+   1. Tokens and base
+   Brand colours (navy, espresso, crema, brass) are reserved for the
+   logo and the assets. The UI uses brighter cousins: sapphire for
+   primary actions, canary for the fun secondary ones, sky and paper
+   for surfaces. Plus Jakarta Sans everywhere; the logo is the official artwork.
+   ============================================================ */
+:root{
+  --navy:#1F3A5F;--espresso:#3B2A20;--crema:#F3E9D7;--brass:#B8893B;--slate:#5C6670;
+  --sapphire:#1F5FE0;--sapphire-d:#1748B0;--canary:#FFEF5C;--canary-d:#F2D600;--sky:#DCEBFF;--mint:#CFF2DF;--peach:#FFDDBB;
+  --paper:#FFFBF2;--ink:#22304A;--ink2:#5B6B85;--line:#E8DFCB;--staff:#D7263D;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);
+  --logo:'Libre Baskerville',Georgia,serif;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--body);-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input,select{font-family:inherit}
+#safeProbe{position:fixed;top:0;left:0;width:1px;height:var(--sat);visibility:hidden;pointer-events:none}
+#bg{position:fixed;inset:-24px;background:#E9DCC6 url("assets/cafe light.png") center/cover no-repeat;filter:blur(14px) saturate(1.05);transform:scale(1.06);z-index:0}
+#bg::after{content:'';position:absolute;inset:0;background:rgba(255,251,242,.55)}
+canvas#homeCanvas,canvas#gameCanvas,canvas#introCanvas{position:fixed;inset:0;display:none;z-index:1;touch-action:none}
+body[data-screen="home"] #homeCanvas,body[data-screen="game"] #gameCanvas,body[data-screen="name"] #introCanvas,body[data-screen="ticket"] #introCanvas{display:block}
+canvas#introCanvas{pointer-events:none}
+@media (max-height:620px){canvas#introCanvas{display:none!important}}
+body[data-screen="home"] #bg,body[data-screen="game"] #bg{display:none}
+
+/* ============================================================
+   2. Screens, cards, logo, buttons
+   ============================================================ */
+.screen{position:fixed;inset:0;z-index:2;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(var(--sat) + 20px) calc(var(--sar) + 18px) calc(var(--sab) + 24px) calc(var(--sal) + 18px)}
+.screen.active{display:block}
+.screen.center.active{display:flex;align-items:center;justify-content:center}
+.card{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:26px;padding:26px 22px;width:100%;max-width:440px;
+  box-shadow:0 20px 50px rgba(31,58,95,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin:auto}
+/* Logo lockup: the official artwork (assets/logo.png, background removed). */
+.brand{text-align:center;margin-bottom:16px}
+.logo{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.logo img{width:150px;height:auto;display:block}
+.brand.small .logo img{width:120px}
+.logo svg{width:54px;height:54px;margin-bottom:4px}
+.logo .wordmark{font-family:var(--logo);font-weight:700;letter-spacing:.12em;font-size:19px;color:var(--navy);line-height:1}
+.logo .cafe{font-family:var(--logo);font-weight:700;letter-spacing:.42em;font-size:10px;color:var(--navy);margin-left:.42em}
+.logo .tagline{font-family:var(--logo);font-style:italic;font-size:12px;color:var(--ink2);margin-top:5px}
+.brand.small .logo svg{width:40px;height:40px}
+.brand.small .logo .wordmark{font-size:15px}
+h1{font-size:27px;font-weight:800;line-height:1.15;margin:8px 0 10px;letter-spacing:-.01em}
+h2{font-size:19px;font-weight:800;margin:0 0 8px}
+p{font-size:16px;line-height:1.45}
+.muted{color:var(--ink2);font-size:14.5px}
+label{display:block;font-size:14px;font-weight:800;margin:16px 0 6px;color:var(--ink2)}
+input.field{width:100%;font-size:20px;font-weight:700;padding:13px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink);outline:none}
+input.field:focus{border-color:var(--sapphire);box-shadow:0 0 0 4px rgba(31,95,224,.18)}
+input.code{letter-spacing:.35em;text-transform:uppercase;text-align:center;font-size:28px;font-weight:800}
+/* Buttons: primary = sapphire, secondary = canary, ghost = outline */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:999px;padding:15px 22px;font-size:17px;font-weight:800;
+  background:var(--sapphire);color:#fff;cursor:pointer;box-shadow:0 8px 20px rgba(31,95,224,.32);transition:transform .12s,filter .12s;margin-top:14px}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+.btn.big{font-size:22px;padding:19px 24px;font-weight:800;box-shadow:0 12px 28px rgba(31,95,224,.4)}
+.btn.big::after{content:'→';font-weight:800}
+.btn.secondary{background:var(--canary);color:var(--navy);box-shadow:0 8px 18px rgba(242,214,0,.35)}
+.btn.ghost{background:#fff;border:2px solid var(--sapphire);color:var(--sapphire);box-shadow:none}
+.row{display:flex;gap:10px}
+.row .btn{margin-top:10px;padding-left:12px;padding-right:12px;font-size:15px}
+.link{background:none;border:0;color:var(--sapphire);text-decoration:underline;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0;margin-top:10px;display:block}
+.err{background:var(--peach);border-left:4px solid var(--brass);padding:8px 10px;border-radius:8px;font-size:14px;font-weight:700;margin-top:10px;display:none}
+.err.show{display:block}
+
+/* ---------- Homepage ---------- */
+#s-home{padding:0}
+#homeContent{position:relative;margin-top:50vh;padding:54px calc(var(--sar) + 18px) calc(var(--sab) + 30px) calc(var(--sal) + 18px);
+  background:linear-gradient(to bottom,rgba(255,251,242,0) 0,rgba(255,251,242,.92) 90px,var(--paper) 100%);min-height:50vh}
+.inner{max-width:480px;margin:0 auto}
+.ticket{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:800;letter-spacing:.04em;background:#fff;
+  border:2px solid var(--sky);border-radius:999px;padding:7px 14px;box-shadow:0 4px 12px rgba(31,58,95,.1)}
+.ticket b{color:var(--sapphire);letter-spacing:.12em}
+.how{margin:22px 0 6px;font-size:16px;line-height:1.7;font-weight:600}
+.how span{display:block}
+.how .n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--canary);color:var(--navy);font-weight:800;font-size:13px;margin-right:9px}
+.dropBanner{display:none;align-items:center;gap:12px;margin:18px 0 4px;padding:12px;border-radius:18px;background:linear-gradient(135deg,var(--sky),#fff);border:2px solid rgba(31,95,224,.18)}
+.dropBanner.show{display:flex}
+.dropBanner img{width:62px;height:62px;border-radius:14px;object-fit:contain;background:#fff;padding:4px;border:2px solid var(--sapphire);flex:none}
+.dropBanner .t{font-size:12px;color:var(--sapphire);letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+.dropBanner p{font-size:15px;line-height:1.35;font-weight:600}
+/* Leaderboard: podium for the top 3, list for the rest */
+.board{margin-top:24px}
+.board h2{display:flex;justify-content:space-between;align-items:baseline;font-size:20px}
+.board h2 small{font-weight:700;font-size:12.5px;color:var(--ink2)}
+.podium{display:grid;grid-template-columns:1fr 1.18fr 1fr;gap:8px;align-items:end;margin:12px 0 10px}
+.podium .p{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 6px 10px;text-align:center;position:relative;min-width:0}
+.podium .p.first{background:linear-gradient(180deg,#FFF8BF,#fff);border-color:var(--canary-d);padding-top:18px}
+.podium .p.me{border-color:var(--sapphire)}
+.podium .crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:22px;line-height:1}
+.av{display:inline-block;border-radius:50%;background:var(--sky);overflow:hidden;flex:none;vertical-align:middle}
+.av img{width:100%;height:100%;display:block}
+.podium .av{width:50px;height:50px;border:3px solid #fff;box-shadow:0 4px 12px rgba(31,58,95,.18);margin-bottom:6px}
+.podium .first .av{width:64px;height:64px;border-color:var(--canary)}
+.podium .rk{display:inline-block;background:var(--ink);color:#fff;font-weight:800;font-size:11px;border-radius:999px;padding:2px 8px;margin-bottom:5px}
+.podium .first .rk{background:var(--canary-d);color:var(--navy)}
+.podium .nm{font-weight:800;font-size:13px;line-height:1.2;min-height:2.4em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.podium .sc{font-weight:800;font-size:22px;color:var(--sapphire);line-height:1.1;margin-top:3px}
+.podium .first .sc{font-size:26px}
+.podium .sc small{display:block;font-size:11px;font-weight:700;color:var(--ink2)}
+.board ol{list-style:none}
+.board li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:14px;font-size:15.5px}
+.board li:nth-child(odd){background:rgba(31,95,224,.05)}
+.board li.me{background:var(--canary)}
+.board li .av{width:32px;height:32px}
+.board .rk{width:22px;font-weight:800;color:var(--ink2);font-size:14px}
+.board .nm{flex:1;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .sc{font-weight:800}
+.board .sc small{font-weight:700;color:var(--ink2);font-size:12px;margin-left:2px}
+.tag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--mint);color:#1E6B45;padding:2px 7px;border-radius:999px;margin-left:-4px;flex:none;font-weight:800}
+/* Staff footer: the one place red is allowed, to flag admin-only tools */
+.staffBar{margin-top:28px;background:var(--staff);color:#fff;border-radius:18px;padding:12px 14px 14px}
+.staffBar .t{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;opacity:.9}
+.staffBar p{font-size:13.5px;opacity:.9;margin-top:2px}
+.staffBar .row .btn{background:#fff;color:var(--staff);box-shadow:none;font-weight:800}
+
+/* ---------- Panels (rewards, drops, share) ---------- */
+.panel{position:fixed;inset:0;z-index:6;background:rgba(34,48,74,.5);display:none;align-items:flex-end;justify-content:center;padding:calc(var(--sat) + 10px) 0 0}
+.panel.show{display:flex}
+.sheet{background:var(--paper);border-radius:26px 26px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:22px 20px calc(var(--sab) + 26px);box-shadow:0 -10px 40px rgba(31,58,95,.25)}
+.sheet h2{display:flex;justify-content:space-between;align-items:center}
+.x{background:none;border:0;color:var(--ink2);font-size:30px;line-height:1;cursor:pointer;padding:2px 8px}
+.dropOpt{display:flex;align-items:center;gap:14px;padding:12px;border-radius:18px;border:2px solid var(--line);margin-top:12px;cursor:pointer;background:#fff;width:100%;text-align:left;color:var(--ink)}
+.dropOpt.on{border-color:var(--sapphire);background:var(--sky)}
+.dropOpt img,.dropOpt .ph{width:64px;height:64px;border-radius:14px;object-fit:contain;background:#fff;padding:4px;border:2px solid var(--line);flex:none}
+.dropOpt .ph{display:none;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.dropOpt b{font-size:16px;font-weight:800;display:block}
+.dropOpt small{font-size:14px;color:var(--ink2)}
+.dropOpt .chk{margin-left:auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--sapphire);flex:none}
+.dropOpt.on .chk{background:var(--sapphire);box-shadow:inset 0 0 0 4px var(--sky)}
+.rewardSum{display:flex;gap:10px;margin-top:12px}
+.rewardSum div{flex:1;background:var(--sky);border-radius:16px;padding:10px;text-align:center}
+.rewardSum b{font-size:24px;font-weight:800;display:block;color:var(--sapphire);line-height:1.1}
+.rewardSum span{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.reward{display:flex;gap:14px;align-items:center;background:#fff;border:2px solid var(--line);color:var(--ink);border-radius:18px;padding:12px;margin-top:12px;position:relative}
+.reward.fresh{border-color:var(--canary-d);background:linear-gradient(135deg,#FFFBE0,#fff)}
+.reward.claimed{opacity:.72;background:#F6F1E6}
+.reward .qr{width:96px;height:96px;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center;word-break:break-all;border-radius:10px;overflow:hidden;background:#fff}
+.reward .qr img,.reward .qr canvas{width:96px!important;height:96px!important}
+.reward.claimed .qr{filter:grayscale(1);opacity:.5}
+.reward.claimed b{padding-right:74px}
+.reward b{font-size:15.5px;font-weight:800;display:block}
+.reward code{font-family:var(--body);font-weight:800;font-size:15px;letter-spacing:.03em;color:var(--sapphire);display:block;margin:3px 0}
+.reward small{font-size:13px;color:var(--ink2);display:block;line-height:1.35}
+.reward .pts{display:inline-block;background:var(--canary);color:var(--navy);font-weight:800;font-size:11.5px;padding:2px 8px;border-radius:999px;margin-top:5px}
+.reward .claimedTag{position:absolute;top:10px;right:12px;background:var(--mint);color:#1E6B45;font-weight:800;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.sectionLabel{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--ink2);margin-top:18px}
+.empty{color:var(--ink2);font-size:15px;margin-top:14px}
+
+/* ============================================================
+   3. Game HUD (light surfaces on the bright cafe photo)
+   ============================================================ */
+#hud{position:fixed;inset:0;z-index:3;pointer-events:none;display:none;font-size:14px;color:var(--ink)}
+body[data-screen="game"] #hud{display:block}
+.pill{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:18px;box-shadow:0 6px 18px rgba(31,58,95,.18)}
+#scoreBox{position:absolute;top:calc(var(--sat) + 14px);left:calc(var(--sal) + 14px);padding:8px 14px 9px}
+#cups{font-size:44px;font-weight:800;line-height:1;color:var(--sapphire);transition:transform .15s}
+#cups small{font-size:14px;font-weight:800;color:var(--ink2);margin-left:4px}
+#cups.bump{transform:scale(1.14)}
+#score{font-size:14px;font-weight:800;color:var(--ink2);margin-top:3px}
+#streak{color:var(--sapphire-d);font-size:13px;font-weight:800;margin-top:2px;min-height:16px}
+#chips{position:absolute;top:calc(var(--sat) + 92px);right:calc(var(--sar) + 14px);display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.chip{background:var(--canary);color:var(--navy);font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;animation:chipIn .5s ease-out;display:flex;gap:6px;align-items:center;box-shadow:0 4px 10px rgba(31,58,95,.15)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--sapphire);display:inline-block}
+@keyframes chipIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+#rightBox{position:absolute;top:calc(var(--sat) + 14px);right:calc(var(--sar) + 14px);text-align:right;padding:9px 12px}
+#spills{display:flex;gap:5px;justify-content:flex-end}
+#spills svg{width:20px;height:22px;transition:opacity .3s}
+#spills svg.lost{opacity:.22}
+#wind{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+#wind b{font-weight:800;color:var(--ink);font-size:14px}
+/* Goal card: mid-screen on the right, always in view */
+#chase{position:absolute;right:calc(var(--sar) + 10px);top:62%;transform:translateY(-50%);width:66px;text-align:center;padding:7px 4px 8px;
+  background:rgba(255,239,92,.94);color:var(--navy);border-radius:16px;box-shadow:0 6px 16px rgba(31,58,95,.2);transition:transform .2s}
+#chase .ico{display:block;height:24px;margin:0 auto 1px}
+#chase .ico img{width:24px;height:24px;border-radius:50%;object-fit:contain;background:#fff}
+#chase .ico span{font-size:19px;line-height:24px}
+#chase b{display:block;font-size:24px;font-weight:800;line-height:1}
+#chase span.txt{display:block;font-size:10px;font-weight:800;line-height:1.15;margin-top:3px}
+#chase.pulse{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.07)}}
+/* Passing notes: "2 cups from passing Diego" / "You passed Diego!" */
+#passNote{position:absolute;top:calc(var(--sat) + 128px);left:50%;transform:translate(-50%,-14px);opacity:0;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:9px;
+  background:#fff;border-radius:999px;padding:5px 14px 5px 5px;box-shadow:0 8px 22px rgba(31,58,95,.22);font-weight:800;font-size:14px;white-space:nowrap;max-width:86vw;overflow:hidden;text-overflow:ellipsis}
+#passNote .av{width:34px;height:34px;border:2px solid var(--sky)}
+#passNote.show{opacity:1;transform:translate(-50%,0)}
+#passNote.win{background:var(--canary)}
+#passNote.win .av{border-color:#fff}
+#passNote small{display:block;font-size:11.5px;font-weight:700;color:var(--ink2)}
+#arPill{position:absolute;left:calc(var(--sal) + 14px);bottom:calc(var(--sab) + 14px);background:rgba(255,255,255,.88);border-radius:999px;
+  padding:6px 12px;font-size:12.5px;font-weight:800;letter-spacing:.03em;display:flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(31,58,95,.15)}
+#arPill i{width:8px;height:8px;border-radius:50%;background:var(--sapphire);display:inline-block;animation:blink 1s infinite}
+#arPill.locked i{animation:none;background:#2BB673}
+@keyframes blink{50%{opacity:.2}}
+#hint{position:absolute;left:0;right:0;bottom:calc(var(--sab) + 62px);text-align:center;font-weight:800;font-size:17px;opacity:0;transition:opacity .4s;text-shadow:0 1px 0 #fff,0 0 14px #fff,0 0 24px #fff}
+#hint.show{opacity:1}
+#banner{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.8);opacity:0;background:#fff;color:var(--ink);
+  font-weight:800;font-size:19px;padding:12px 22px;border-radius:999px;text-align:center;width:max-content;max-width:88vw;transition:opacity .25s,transform .25s;box-shadow:0 12px 32px rgba(31,58,95,.25)}
+#banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#banner.big{font-size:24px;background:var(--canary);color:var(--navy);border-radius:24px;padding:16px 26px;top:77%}
+#banner small{display:block;font-size:14px;margin-top:3px;font-weight:700;color:var(--ink2)}
+#banner.big small{color:var(--navy)}
+#flash{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.95),rgba(255,239,92,.6) 60%,rgba(255,239,92,0));opacity:0;transition:opacity 1s ease-out}
+#flash.on{opacity:1;transition:opacity .05s}
+#unlock{position:fixed;left:calc(50% - 22px);top:47%;z-index:4;pointer-events:none;width:164px;height:164px;border-radius:50%;border:5px solid var(--canary);overflow:hidden;background:#fff;
+  box-shadow:0 0 0 10px rgba(255,239,92,.35),0 20px 50px rgba(31,58,95,.35);transform:translate(-50%,-50%) scale(0);opacity:0;transition:transform .45s cubic-bezier(.2,1.6,.4,1),opacity .3s}
+#unlock.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+#unlock img{width:100%;height:100%;object-fit:contain;padding:12px}
+
+/* ---------- Game over ---------- */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.stat{background:var(--sky);border-radius:16px;padding:10px 12px}
+.stat b{font-size:24px;font-weight:800;display:block;color:var(--ink)}
+.stat span{font-size:13px;font-weight:700;color:var(--ink2)}
+.bigScore{font-size:72px;font-weight:800;line-height:1;text-align:center;color:var(--sapphire);letter-spacing:-.02em}
+.bigScore small{font-size:20px;font-weight:800;color:var(--ink2);letter-spacing:0;margin-left:4px}
+.caption{text-align:center;font-size:15px;font-weight:700;color:var(--ink2);margin-top:4px}
+.topNote{background:linear-gradient(135deg,#FFF8BF,#fff);border:2px solid var(--canary-d);border-radius:16px;padding:12px;font-weight:700;font-size:15px;line-height:1.45;margin-top:10px;display:none}
+.topNote.show{display:block}
+.sectionTitle{margin-top:18px}
+@media (prefers-reduced-motion:reduce){#chase.pulse{animation:none}.chip{animation:none}#arPill i{animation:none}}
+@media (min-width:700px){#homeContent{margin-top:50vh}}
+
+/* ============================================================
+   4. Share card, admin page, toast
+   ============================================================ */
+.sharePreview{display:flex;justify-content:center;align-items:center;margin-top:14px;min-height:220px}
+.sharePreview img{max-width:100%;max-height:50vh;border-radius:16px;border:2px solid var(--line);box-shadow:0 14px 40px rgba(31,58,95,.25);background:#fff}
+.seg{display:flex;background:var(--sky);border-radius:999px;padding:4px;margin-top:14px}
+.seg button{flex:1;border:0;background:none;color:var(--ink);font-weight:800;font-size:14px;padding:9px;border-radius:999px;cursor:pointer}
+.seg button.on{background:var(--sapphire);color:#fff}
+.dest{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.dest button{display:flex;align-items:center;gap:10px;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:16px;padding:11px 12px;font-size:15px;font-weight:800;cursor:pointer;text-align:left}
+.dest button:active{transform:scale(.97)}
+.dest .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;background:var(--sapphire);flex:none}
+.dest small{display:block;font-weight:600;font-size:12.5px;color:var(--ink2)}
+.capBox{background:var(--sky);border-radius:14px;padding:10px 12px;font-size:14px;font-weight:600;margin-top:12px;line-height:1.4}
+.spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--sky);border-top-color:var(--sapphire);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.shareDone{text-align:center;background:var(--mint);border-radius:18px;padding:14px;margin-top:12px}
+.shareDone b{font-size:18px;font-weight:800;display:block;margin-bottom:4px}
+.toast{position:fixed;left:50%;bottom:calc(var(--sab) + 28px);transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;z-index:20;opacity:0;transition:opacity .25s,transform .25s;box-shadow:0 10px 30px rgba(31,58,95,.35);max-width:88vw;text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Admin (mock, clickable only). Red header = staff only. ---------- */
+#s-admin{padding:0}
+.adminTop{position:sticky;top:0;z-index:2;background:var(--staff);color:#fff;padding:calc(var(--sat) + 12px) calc(var(--sar) + 16px) 12px calc(var(--sal) + 16px)}
+.adminTop .inner{display:flex;align-items:center;gap:12px;max-width:560px;margin:0 auto}
+.adminTop h1{margin:0;font-size:21px;flex:1;color:#fff}
+.adminTop .back{background:#fff;color:var(--staff);border:0;border-radius:999px;padding:8px 14px;font-weight:800;cursor:pointer;font-size:14px}
+.adminTop .pillTag{background:rgba(255,255,255,.22);color:#fff}
+.adminWrap{max-width:560px;margin:0 auto;padding:10px calc(var(--sar) + 16px) calc(var(--sab) + 110px) calc(var(--sal) + 16px)}
+.demoNote{background:var(--peach);border:2px dashed var(--brass);border-radius:14px;padding:8px 12px;font-size:13.5px;font-weight:700;margin:8px 0 4px}
+.aCard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px;box-shadow:0 6px 18px rgba(31,58,95,.08)}
+.aCard h2{display:flex;justify-content:space-between;align-items:center;font-size:17px;margin-bottom:4px}
+.aRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:15px;font-weight:600}
+.aRow .lbl small{display:block;font-size:12.5px;color:var(--ink2);margin-top:1px;font-weight:600}
+.sw{width:46px;height:26px;border-radius:999px;background:#CBD3E0;position:relative;border:0;cursor:pointer;flex:none;transition:background .2s}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--sapphire)}.sw.on::after{left:23px}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:30px;height:30px;border-radius:50%;border:2px solid var(--sapphire);background:#fff;color:var(--sapphire);font-size:18px;font-weight:800;cursor:pointer;line-height:1}
+.stepper b{min-width:30px;text-align:center;font-weight:800}
+.pillTag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sky);color:var(--ink);white-space:nowrap;font-weight:800}
+.pillTag.live{background:var(--canary);color:var(--navy)}
+.dropRow{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.dropRow img,.dropRow .ph{width:48px;height:48px;border-radius:12px;object-fit:contain;background:#fff;padding:3px;border:2px solid var(--line);flex:none}
+.dropRow .ph{display:none;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.dropRow .info{flex:1;min-width:0}.dropRow .info b{display:block;font-weight:800;font-size:15px}.dropRow .info small{font-size:12.5px;color:var(--ink2);display:block}
+.slider{width:44%;accent-color:var(--sapphire)}
+.aRow output{min-width:36px;text-align:right;font-size:14px;font-weight:800}
+input.small,select.small{font-size:15px;font-weight:600;padding:9px 10px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink);width:100%;font-family:inherit}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form{display:none;margin-top:12px;padding-top:4px;border-top:1px solid var(--line)}
+.form.show{display:block}
+.form label{margin:10px 0 4px;font-size:13px}
+.btn.sm{padding:9px 14px;font-size:14px;width:auto;margin-top:0}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpi div{background:var(--sky);border-radius:14px;padding:10px 6px;text-align:center}
+.kpi b{font-size:22px;font-weight:800;display:block;color:var(--sapphire)}
+.kpi span{font-size:12px;font-weight:700;color:var(--ink2)}
+.saveBar{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:14px calc(var(--sar) + 16px) calc(var(--sab) + 14px) calc(var(--sal) + 16px);background:linear-gradient(to top,var(--paper) 60%,rgba(255,251,242,0));display:none}
+body[data-screen="admin"] .saveBar{display:block}
+.saveBar .inner{display:flex;gap:10px}
+.saveBar .btn{margin-top:0}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
+</style>
+</head>
+<body data-screen="name">
+<div id="safeProbe"></div>
+<div id="bg"></div>
+<canvas id="introCanvas"></canvas>
+<canvas id="homeCanvas"></canvas>
+<canvas id="gameCanvas"></canvas>
+
+<!-- ============================ 1. NAME ============================ -->
+<section class="screen center active" id="s-name">
+  <div class="card">
+    <div class="brand"></div>
+    <h1>Welcome to Mainstay Stack</h1>
+    <p class="muted">Stack cups while your coffee brews. Win treats. Beat the regulars.</p>
+    <label for="nameInput">Your name</label>
+    <input class="field" id="nameInput" maxlength="16" autocomplete="given-name" placeholder="e.g. Sam" enterkeyhint="go">
+    <div class="err" id="nameErr">Please enter 2 to 16 characters.</div>
+    <button class="btn" id="nameBtn">Let's go</button>
+    <button class="link" id="changeName" style="display:none">Not you? Change name</button>
+  </div>
+</section>
+
+<!-- ============================ 2. PLAY TICKET ============================ -->
+<section class="screen center" id="s-ticket">
+  <div class="card">
+    <div class="brand"></div>
+    <h1 id="ticketHi">Hey there!</h1>
+    <p>Pop in the 6-character code from your cup or receipt.</p>
+    <label for="codeInput">Play code</label>
+    <input class="field code" id="codeInput" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" enterkeyhint="go">
+    <div class="err" id="codeErr">This code has been used. Each order gets one play.</div>
+    <button class="btn" id="codeBtn" disabled>Continue</button>
+    <button class="link" id="sampleCode">Demo: use a sample code</button>
+  </div>
+</section>
+
+<!-- ============================ 3. HOMEPAGE ============================ -->
+<section class="screen" id="s-home">
+  <div id="homeContent"><div class="inner">
+    <div class="ticket">Ticket <b id="homeTicket">ABC123</b> · 1 play</div>
+    <button class="btn big" id="playBtn">Play now</button>
+    <div class="how">
+      <span><span class="n">1</span>Tap to drop. Stack them high.</span>
+      <span id="howPromo"><span class="n">2</span>Hit 20 cups and a pastry is on us.</span>
+      <span><span class="n">3</span>Top of the board on Monday wins a free coffee.</span>
+    </div>
+    <div class="dropBanner" id="homeDrop"><img id="homeDropImg" alt=""><div><div class="t" id="homeDropTitle">This week's promo</div><p id="homeDropText"></p></div></div>
+    <button class="btn ghost" id="rewardsBtn">My rewards</button>
+    <div class="board"><h2>Stack Leaderboard <small id="homeWeek"></small></h2><div id="homeBoard"></div></div>
+    <div class="staffBar">
+      <div class="t">Staff only · demo tools</div>
+      <p>These won't show in the real app. Use them to try the promos and the admin page.</p>
+      <div class="row"><button class="btn" id="dropsBtn">Demo: promos</button><button class="btn" id="adminLink">Open the admin demo</button></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ============================ 4. GAME HUD ============================ -->
+<div id="hud">
+  <div id="scoreBox" class="pill">
+    <div id="cups">0<small>cups</small></div>
+    <div id="score">0 pts</div>
+    <div id="streak"></div>
+  </div>
+  <div id="chips"></div>
+  <div id="rightBox" class="pill">
+    <div id="spills"></div>
+    <div id="wind"><b>Calm</b></div>
+  </div>
+  <div id="passNote"><span class="av"><img id="passAv" alt=""></span><span id="passTxt"></span></div>
+  <div id="chase"><span class="ico" id="chaseIco"><span>🥐</span></span><b id="chaseN">20</b><span class="txt" id="chaseTxt">to a free pastry</span></div>
+  <div id="banner"></div>
+  <div id="hint">Tap anywhere to drop</div>
+  <div id="arPill"><i></i><span>AR · Scanning</span></div>
+</div>
+<div id="flash"></div>
+<div id="unlock"><img id="unlockImg" alt=""></div>
+
+<!-- ============================ 5. GAME OVER ============================ -->
+<section class="screen" id="s-over">
+  <div class="card">
+    <div class="brand small"></div>
+    <div class="bigScore"><span id="overCups">0</span><small>cups</small></div>
+    <div class="caption" id="overCaption">0 points</div>
+    <div class="stats">
+      <div class="stat"><b id="stScore">0</b><span>points earned</span></div>
+      <div class="stat"><b id="stStreak">0</b><span>best perfect streak</span></div>
+      <div class="stat"><b id="stPassed">0</b><span>players passed</span></div>
+      <div class="stat"><b id="stRank">#1</b><span>on the board</span></div>
+    </div>
+    <div class="topNote" id="topNote">You're top of the board! Hold the lead until Monday and your next coffee is on us.</div>
+    <h2 class="sectionTitle">Codes earned this run</h2>
+    <div id="overCodes"></div>
+    <div class="board"><h2>Stack Leaderboard <small id="overWeek"></small></h2><div id="overBoard"></div></div>
+    <button class="btn secondary" id="shareBtn">Share your stack</button>
+    <button class="btn" id="againBtn">Enter another code</button>
+    <button class="btn ghost" id="rewardsBtn2">My rewards</button>
+  </div>
+</section>
+
+<!-- ============================ Panels ============================ -->
+<div class="panel" id="p-rewards"><div class="sheet">
+  <h2>My rewards <button class="x" data-close="p-rewards" aria-label="Close">×</button></h2>
+  <p class="muted">Show a code to your barista to redeem it.</p>
+  <div class="rewardSum" id="rewardSum"></div>
+  <div id="rewardsList"></div>
+</div></div>
+<div class="panel" id="p-drops"><div class="sheet">
+  <h2>Demo: promos <button class="x" data-close="p-drops" aria-label="Close">×</button></h2>
+  <p class="muted">One promo runs at a time. Free pastry is the default. A drop swings in as the 10th item: land it and it's yours.</p>
+  <div id="dropOpts"></div>
+</div></div>
+
+<div class="panel" id="p-share"><div class="sheet">
+  <h2>Share your stack <button class="x" data-close="p-share" aria-label="Close">×</button></h2>
+  <p class="muted" id="shareSub">A short GIF of your run, ready for your story or feed.</p>
+  <div class="seg" id="shareFmt"><button data-fmt="story" class="on">Story · 9:16</button><button data-fmt="feed">Feed · 1:1</button></div>
+  <div class="sharePreview" id="sharePreview"><div class="spinner"></div></div>
+  <div class="capBox" id="shareCaption"></div>
+  <div id="shareActions">
+    <button class="btn" id="shareGo">Share</button>
+    <button class="btn ghost" id="shareSave">Save GIF</button>
+  </div>
+  <div id="sharePick" style="display:none">
+    <p class="muted" style="margin-top:14px">Where do you want to share it?</p>
+    <div class="dest" id="shareDest"></div>
+    <button class="link" id="shareBack">Back</button>
+  </div>
+  <div id="shareDone" style="display:none"></div>
+</div></div>
+
+<!-- ============================ 6. ADMIN (mock) ============================ -->
+<section class="screen" id="s-admin">
+<div class="adminTop"><div class="inner"><button class="back" id="adminBack">‹ Back</button><h1>Admin · Staff only</h1><span class="pillTag">Demo</span></div></div>
+<div class="adminWrap">
+  <div class="demoNote">Demo only. Everything here is clickable, but nothing is saved or applied yet.</div>
+
+  <div class="aCard">
+    <h2>This week <span class="pillTag" id="adminWeek">Nov 3 – Nov 9</span></h2>
+    <div class="kpi"><div><b>212</b><span>plays</span></div><div><b>37</b><span>pastries earned</span></div><div><b>19</b><span>drops redeemed</span></div></div>
+  </div>
+
+  <div class="aCard">
+    <h2>Promos and drops <button class="btn sm" id="adminNewDrop">+ New drop</button></h2>
+    <div class="dropRow"><img data-asset="croissant" alt=""><div class="ph">Pastry</div><div class="info"><b>Free pastry</b><small>Default promo · 20 cups in one run · Runs whenever no drop is live</small></div><span class="pillTag" data-drop-tag="pastry">Default</span><button class="sw" data-drop-sw="pastry" role="switch" aria-label="Free pastry promo"></button></div>
+    <div class="dropRow"><img data-asset="matcha" alt=""><div class="ph">Matcha</div><div class="info"><b>Matcha Latte</b><small>New product · 10th item · Nov 3 – Nov 16</small></div><span class="pillTag" data-drop-tag="matcha">Scheduled</span><button class="sw" data-drop-sw="matcha" role="switch" aria-label="Matcha Latte drop"></button></div>
+    <div class="dropRow"><img data-asset="plushie" alt=""><div class="ph">Plushie</div><div class="info"><b>Mainstay cup plush keychain</b><small>Limited merch · 10th item · Nov 17 – Nov 30</small></div><span class="pillTag" data-drop-tag="plushie">Scheduled</span><button class="sw" data-drop-sw="plushie" role="switch" aria-label="Cup plushie drop"></button></div>
+    <div class="dropRow"><div class="ph" style="display:flex">Draft</div><div class="info"><b>Pumpkin cold foam</b><small>Seasonal offer · Draft · No dates yet</small></div><span class="pillTag">Draft</span><button class="sw" role="switch" aria-label="Pumpkin cold foam drop"></button></div>
+    <div class="form" id="adminDropForm">
+      <label>Drop name</label><input class="small" placeholder="e.g. Cinnamon bun">
+      <div class="form2">
+        <div><label>Type</label><select class="small"><option>New product</option><option>Limited merch</option><option>Seasonal offer</option></select></div>
+        <div><label>Lands as</label><select class="small"><option>10th item</option><option>15th item</option><option>20th item</option></select></div>
+        <div><label>Starts</label><input class="small" type="date" value="2026-11-17"></div>
+        <div><label>Ends</label><input class="small" type="date" value="2026-11-30"></div>
+        <div><label>Max redemptions</label><input class="small" type="number" value="150"></div>
+        <div><label>Photo</label><button class="btn ghost sm mock" style="width:100%;margin-top:0" data-toast="Demo: photo picker">Upload photo</button></div>
+      </div>
+      <div class="row"><button class="btn sm mock" data-toast="Demo: drop saved as draft">Save draft</button><button class="btn ghost sm" id="adminDropCancel">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="aCard">
+    <h2>Difficulty</h2>
+    <div class="seg" style="margin-top:8px" id="adminDiff"><button>Gentle</button><button class="on">Standard</button><button>Tough</button></div>
+    <div class="aRow"><div class="lbl">Swing speed<small>How fast the crane swings at the start</small></div><input class="slider" type="range" min="50" max="150" value="100" data-unit="%"><output>100%</output></div>
+    <div class="aRow"><div class="lbl">Perfect zone<small>Snap-to-centre tolerance</small></div><input class="slider" type="range" min="50" max="150" value="100" data-unit="%"><output>100%</output></div>
+    <div class="aRow"><div class="lbl">Wind strength<small>Sway and gusts above 10 cups</small></div><input class="slider" type="range" min="0" max="200" value="100" data-unit="%"><output>100%</output></div>
+    <div class="aRow"><div class="lbl">Weather and sky objects<small>Rain, snow, birds, planes</small></div><button class="sw on" role="switch" aria-label="Weather and sky objects"></button></div>
+    <div class="aRow"><div class="lbl">Spills allowed</div><div class="stepper" data-min="1" data-max="5"><button>−</button><b>3</b><button>+</button></div></div>
+  </div>
+
+  <div class="aCard">
+    <h2>Rewards</h2>
+    <div class="aRow"><div class="lbl">Free pastry at<small>Cups stacked in one run</small></div><div class="stepper" data-min="5" data-max="50" data-step="5"><button>−</button><b>20</b><button>+</button></div></div>
+    <div class="aRow"><div class="lbl">Weekly prize</div><select class="small" style="width:46%"><option>Free coffee</option><option>Free pastry</option><option>$10 gift card</option></select></div>
+    <div class="aRow"><div class="lbl">Staff eligible for prizes</div><button class="sw" role="switch" aria-label="Staff eligible for prizes"></button></div>
+    <div class="aRow"><div class="lbl">Plays per order</div><div class="stepper" data-min="1" data-max="3"><button>−</button><b>1</b><button>+</button></div></div>
+  </div>
+
+  <div class="aCard">
+    <h2>Promo window</h2>
+    <div class="form2" style="margin-top:8px">
+      <div><label style="margin-top:0">Starts</label><input class="small" type="date" id="promoStart" value="2026-11-03"></div>
+      <div><label style="margin-top:0">Ends</label><input class="small" type="date" id="promoEnd" value="2026-12-14"></div>
+    </div>
+    <div class="aRow"><div class="lbl">Runs for</div><b id="promoDays">6 weeks</b></div>
+    <div class="aRow"><div class="lbl">Board resets</div><select class="small" style="width:46%"><option>Every Monday</option><option>Every day</option><option>End of promo</option></select></div>
+  </div>
+
+  <div class="aCard">
+    <h2>Leaderboard and codes</h2>
+    <div class="aRow"><div class="lbl">Remove an entry<small>Hide a name from this week's board</small></div><button class="btn ghost sm mock" data-toast="Demo: pick a name to remove">Remove</button></div>
+    <div class="aRow"><div class="lbl">Reset this week's board</div><button class="btn ghost sm mock" data-toast="Demo: board would reset">Reset</button></div>
+    <div class="aRow"><div class="lbl">Redemptions<small>Pastry and drop codes scanned at the till</small></div><button class="btn ghost sm mock" data-toast="Demo: redemptions.csv would download">Export CSV</button></div>
+    <div class="aRow"><div class="lbl">Issue a free-coffee code<small>For this week's winner</small></div><button class="btn ghost sm mock" data-toast="Demo: MS-COFFEE code issued to Ana the stack master">Issue</button></div>
+  </div>
+</div>
+<div class="saveBar"><div class="inner" style="max-width:560px;margin:0 auto"><button class="btn ghost mock" data-toast="Demo: changes discarded">Discard</button><button class="btn mock" data-toast="Demo: settings saved. Nothing is applied yet.">Save changes</button></div></div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   1. Brand, helpers, storage
+   ============================================================ */
+const COL={navy:'#1F3A5F',espresso:'#3B2A20',crema:'#F3E9D7',brass:'#B8893B',slate:'#5C6670',
+  sapphire:'#1F5FE0',canary:'#FFEF5C',ink:'#22304A',ink2:'#5B6B85',paper:'#FFFBF2',sky:'#DCEBFF'}; // brand colours are for logo and assets; the rest is the UI palette
+const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const TAU=Math.PI*2;
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+function randCode(prefix){const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=ch[Math.floor(Math.random()*ch.length)];return prefix+'-'+s;}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function plural(n,one,many){return n+' '+(n===1?one:many);}
+let userTapped=false;window.addEventListener('pointerdown',()=>{userTapped=true;},{once:true});window.addEventListener('keydown',()=>{userTapped=true;},{once:true});
+function vibrate(p){try{if(userTapped&&navigator.vibrate&&!REDUCED)navigator.vibrate(p);}catch(e){}}
+const session={name:'',ticket:'',codesThisRun:[]};
+
+/* ---------- Tiny synth (no audio files). The context wakes on the first tap. ---------- */
+let AC=null;
+function ac(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}return AC;}
+window.addEventListener('pointerdown',()=>ac(),{once:true});window.addEventListener('keydown',()=>ac(),{once:true});
+function tone(freq,dur,type,vol,delay,slide){
+  const c=ac();if(!c)return;
+  try{const t0=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,t0);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+dur);
+    g.gain.setValueAtTime(vol||0.07,t0);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    o.connect(g).connect(c.destination);o.start(t0);o.stop(t0+dur);}catch(e){}
+}
+let noiseBuf=null;
+function noiseSrc(c){if(!noiseBuf){noiseBuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}const s=c.createBufferSource();s.buffer=noiseBuf;s.loop=true;return s;}
+/* One-shot filtered noise: thunder, gusts, the sparkle under a fanfare. */
+function puff(dur,vol,delay,freq,type){
+  const c=ac();if(!c)return;
+  try{const t0=c.currentTime+(delay||0),s=noiseSrc(c),f=c.createBiquadFilter(),g=c.createGain();
+    f.type=type||'lowpass';f.frequency.setValueAtTime(freq,t0);f.frequency.exponentialRampToValueAtTime(Math.max(40,freq*0.25),t0+dur);
+    g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    s.connect(f).connect(g).connect(c.destination);s.start(t0);s.stop(t0+dur+0.05);}catch(e){}
+}
+/* Looping rain bed, faded in and out with the weather. */
+const RAIN={src:null,gain:null};
+function rainStart(){
+  const c=ac();if(!c||RAIN.src)return;
+  try{const s=noiseSrc(c),f=c.createBiquadFilter(),g=c.createGain();f.type='bandpass';f.frequency.value=1800;f.Q.value=0.5;
+    g.gain.setValueAtTime(0.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.045,c.currentTime+1.5);
+    s.connect(f).connect(g).connect(c.destination);s.start();RAIN.src=s;RAIN.gain=g;}catch(e){}
+}
+function rainStop(){
+  const c=AC;if(!c||!RAIN.src)return;
+  try{const s=RAIN.src,g=RAIN.gain;g.gain.cancelScheduledValues(c.currentTime);g.gain.setValueAtTime(Math.max(0.0001,g.gain.value),c.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+1.2);s.stop(c.currentTime+1.3);}catch(e){}
+  RAIN.src=null;RAIN.gain=null;
+}
+const SFX={
+  land(){tone(196,.14,'triangle',.08);},
+  perfect(){tone(659,.14,'sine',.07);tone(988,.22,'sine',.06,.08);},
+  spill(){tone(130,.3,'sawtooth',.04);puff(.25,.05,0,900);},
+  pass(){tone(587,.12,'sine',.06);tone(880,.25,'sine',.06,.1);},
+  near(){tone(740,.1,'sine',.05);tone(740,.1,'sine',.05,.14);},
+  start(){[392,523,659,784].forEach((f,i)=>tone(f,.22,'triangle',.06,i*.08));tone(1046,.5,'sine',.05,.34);},
+  end(){[784,659,523,392].forEach((f,i)=>tone(f,.3,'triangle',.06,i*.16));tone(262,.9,'sine',.05,.66);},
+  /* Prize celebration: fanfare, a high trill and a sparkle of noise. */
+  celebrate(){[523,659,784,1046,1318].forEach((f,i)=>tone(f,.35,'triangle',.07,i*.09));
+    [1568,1760,1976,2093].forEach((f,i)=>tone(f,.12,'sine',.04,.55+i*.07));tone(1046,1.2,'sine',.05,.85);puff(.9,.04,.4,5000,'highpass');},
+  birds(){for(let i=0;i<4;i++)tone(2200+Math.random()*600,.09,'sine',.028,i*.13+Math.random()*.04,3100);},
+  thunder(){puff(1.4,.14,0,260);puff(.6,.07,.25,120);},
+  gust(){puff(.9,.035,0,700,'bandpass');},
+  incoming(){tone(880,.1,'square',.03);tone(1175,.18,'square',.03,.12);}
+};
+
+/* ============================================================
+   2. Stack Leaderboard (cups stacked, localStorage, resets every Monday)
+   ============================================================ */
+const SEED=[
+  {name:'Ana the stack master',cups:54,pts:142},{name:'Priya S.',cups:41,pts:96},{name:'Marcus T.',cups:36,pts:81},
+  {name:'Dee (barista)',cups:31,pts:70,staff:true},{name:'Jordan L.',cups:28,pts:61},{name:'Mei C.',cups:22,pts:48},
+  {name:"Mochi's mom",cups:19,pts:40},{name:'Sam (shift lead)',cups:18,pts:37,staff:true},{name:'Tin',cups:16,pts:33},
+  {name:'Hannah K.',cups:12,pts:24},{name:'Diego F.',cups:9,pts:17},{name:'Latte Larry',cups:7,pts:12},{name:'Omar A.',cups:4,pts:6}
+];
+function mondayOf(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d;}
+function weekKey(){const d=mondayOf();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function weekRange(){const a=mondayOf(),b=new Date(a);b.setDate(a.getDate()+6);const f=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric'});return f(a)+' – '+f(b);}
+function getBoard(){
+  let b=store.get('ms_board',null);
+  if(!b||b.week!==weekKey()||!Array.isArray(b.entries)||!b.entries.every(e=>typeof e.cups==='number')){b={week:weekKey(),entries:SEED.map(e=>Object.assign({},e))};store.set('ms_board',b);}
+  return b;
+}
+function sortedBoard(){return getBoard().entries.slice().sort((a,b)=>b.cups-a.cups||b.pts-a.pts);}
+function playerBest(name){const e=getBoard().entries.find(x=>x.name===name);return e?e.cups:0;}
+function submitScore(name,cups,pts){const b=getBoard();const e=b.entries.find(x=>x.name===name);if(e){if(cups>e.cups||(cups===e.cups&&pts>e.pts)){e.cups=cups;e.pts=pts;}}else b.entries.push({name,cups,pts});store.set('ms_board',b);}
+function rankOf(name,cups){return 1+getBoard().entries.filter(e=>e.name!==name&&e.cups>=cups).length;}
+/* Procedural avatar: a friendly face drawn from a hash of the name, so every player gets a consistent one with no upload. */
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+const AV_CACHE={};
+function avatarSVG(name){
+  if(AV_CACHE[name])return AV_CACHE[name];
+  const h=hashStr(name||'?'),bgs=['#FFE08A','#BFE3FF','#C8F0D8','#FFC9C9','#E3D4FF','#FFD9B3','#BDF0EA','#F9D6EF'],skins=['#F8D5B8','#E8B894','#C98E67','#8D5A3B','#5C3A23'],hairs=['#2B1B12','#5A3A22','#C98A3A','#E6D3B3','#1F3A5F','#B8893B'];
+  const bg=bgs[h%8],skin=skins[(h>>3)%5],hair=hairs[(h>>6)%6],style=(h>>9)%5,glasses=((h>>12)%4)===0,grin=(h>>14)%3;
+  const hairS=[
+    `<path d="M15 30c0-11 7-18 17-18s17 7 17 18v3H15z" fill="${hair}"/>`,
+    `<path d="M12 52V30c0-11 9-18 20-18s20 7 20 18v22h-8V38c0-6-5-10-12-10s-12 4-12 10v14z" fill="${hair}"/>`,
+    `<circle cx="32" cy="13" r="7" fill="${hair}"/><path d="M15 31c0-10 7-16 17-16s17 6 17 16v2H15z" fill="${hair}"/>`,
+    `<path d="M14 31c0-11 8-18 18-18s18 7 18 18H14z" fill="${hair}"/><rect x="10" y="29" width="44" height="5" rx="2.5" fill="${hair}"/>`,
+    `<path d="M16 34c-2-14 6-22 16-22s18 8 16 22c-3-6-8-9-16-9s-13 3-16 9z" fill="${hair}"/>`
+  ][style];
+  const mouth=grin===0?`<path d="M26 42q6 6 12 0" stroke="#22304A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`:grin===1?`<path d="M26 42q6 6 12 0z" fill="#22304A"/><path d="M28 42.5q4 2 8 0" stroke="#fff" stroke-width="1.5"/>`:`<path d="M27 42q5 3 10 0" stroke="#22304A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  const gl=glasses?`<circle cx="26" cy="35" r="5" fill="none" stroke="#22304A" stroke-width="1.6"/><circle cx="38" cy="35" r="5" fill="none" stroke="#22304A" stroke-width="1.6"/><path d="M31 35h2" stroke="#22304A" stroke-width="1.6"/>`:'';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${bg}"/><path d="M6 66c2-13 12-20 26-20s24 7 26 20z" fill="#fff"/><circle cx="32" cy="35" r="16" fill="${skin}"/>${hairS}<circle cx="26" cy="35" r="2.1" fill="#22304A"/><circle cx="38" cy="35" r="2.1" fill="#22304A"/><circle cx="21" cy="40" r="2.5" fill="#F48C8C" opacity=".5"/><circle cx="43" cy="40" r="2.5" fill="#F48C8C" opacity=".5"/>${mouth}${gl}</svg>`;
+  return AV_CACHE[name]='data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+}
+function avatarHTML(name){return `<span class="av"><img src="${avatarSVG(name)}" alt=""></span>`;}
+/* Podium for the top three, then the rest of the top ten as a list. */
+function renderBoard(el,name){
+  const list=sortedBoard().slice(0,10),top=list.slice(0,3),rest=list.slice(3);
+  const pod=[top[1],top[0],top[2]].map((e,i)=>{if(!e)return '<div></div>';const rk=i===1?1:i===0?2:3;
+    return `<div class="p ${rk===1?'first':''} ${e.name===name?'me':''}">${rk===1?'<span class="crown">👑</span>':''}${avatarHTML(e.name)}<div><span class="rk">#${rk}</span></div><div class="nm">${escapeHtml(e.name)}</div><div class="sc">${e.cups}<small>cups</small></div></div>`;}).join('');
+  const li=rest.map((e,i)=>`<li class="${e.name===name?'me':''}"><span class="rk">${i+4}</span>${avatarHTML(e.name)}<span class="nm">${escapeHtml(e.name)}</span>${e.staff?'<span class="tag">staff</span>':''}<span class="sc">${e.cups}<small>cups</small></span></li>`).join('');
+  el.innerHTML=`<div class="podium">${pod}</div><ol>${li}</ol>`;
+}
+
+/* ============================================================
+   3. Rewards, promos, used codes
+   ============================================================ */
+/* A few claimed rewards from past weeks so the list feels lived-in. Seeded once. */
+const PAST_REWARDS=[
+  {code:'MS-MATCHA-7KQ2',type:'matcha',label:'Free Matcha Latte',cups:14,pts:31,claimed:true,at:Date.parse('2026-10-27T15:20:00')},
+  {code:'MS-PASTRY-B4NX',type:'pastry',label:'Free pastry',cups:23,pts:52,claimed:true,at:Date.parse('2026-10-14T08:45:00')},
+  {code:'MS-COFFEE-9ZLM',type:'coffee',label:'Free coffee · weekly winner',cups:31,pts:74,claimed:true,at:Date.parse('2026-09-28T10:05:00')},
+  {code:'MS-PASTRY-QW38',type:'pastry',label:'Free pastry',cups:20,pts:41,claimed:true,at:Date.parse('2026-09-16T17:30:00')}
+];
+function getRewards(){
+  let r=store.get('ms_rewards',null);
+  if(!Array.isArray(r)||!r.some(x=>x.claimed)){r=(Array.isArray(r)?r:[]).concat(PAST_REWARDS.map(x=>Object.assign({},x)));store.set('ms_rewards',r);}
+  return r;
+}
+function addReward(r){const l=getRewards();l.unshift(r);store.set('ms_rewards',l.slice(0,60));}
+function lifetimePoints(){const p=store.get('ms_points',null);return typeof p==='number'?p:1180;}
+function addPoints(n){store.set('ms_points',lifetimePoints()+n);}
+function rewardCard(r,hint){
+  const d=r.at?new Date(r.at):null,when=d?d.toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
+  const fresh=session.codesThisRun.includes(r);
+  return `<div class="reward ${r.claimed?'claimed':''} ${fresh?'fresh':''}"><div class="qr" data-code="${escapeHtml(r.code)}"></div><div>
+    ${r.claimed?'<span class="claimedTag">Claimed</span>':''}<b>${escapeHtml(r.label)}</b><code>${escapeHtml(r.code)}</code>
+    <small>${r.claimed?'Redeemed '+when:(hint?'Show this to your barista':'')+(when?(hint?' · ':'')+when:'')}</small>
+    ${typeof r.pts==='number'?`<span class="pts">+${r.pts} pts · ${plural(r.cups||0,'cup','cups')}</span>`:''}</div></div>`;
+}
+function mountQRs(container){
+  container.querySelectorAll('.qr[data-code]').forEach(el=>{
+    el.innerHTML='';const code=el.dataset.code;
+    if(window.QRCode){try{new QRCode(el,{text:code,width:104,height:104,colorDark:COL.navy,colorLight:COL.crema,correctLevel:QRCode.CorrectLevel.M});return;}catch(e){}}
+    el.textContent=code;
+  });
+}
+const DROPS={
+  matcha:{key:'matcha',title:'Matcha Latte',short:'Matcha Latte',sub:'New on the menu',prefix:'MS-MATCHA',label:'Free Matcha Latte',alert:'New drop alert: Matcha Latte. Land the matcha on your 10th stack and get it for free.'},
+  plushie:{key:'plushie',title:'Mainstay cup plush keychain',short:'Cup plushie',sub:'Limited edition merch',prefix:'MS-PLUSH',label:'Free cup plushie',alert:'New drop alert: Mainstay cup plush keychain. Land the plushie on your 10th stack and get it for free.'}
+};
+const PASTRY_PROMO={key:'pastry',title:'Free pastry',sub:'Stack 20 cups in one run',alert:'Stack 20 cups in one run and your next pastry is on the house.'};
+/* One promo at a time: the free pastry (default) or a single drop. Never both. */
+function activePromo(){const k=store.get('ms_drop','pastry');return DROPS[k]?k:'pastry';}
+function activeDrop(){return DROPS[activePromo()]||null;}
+function usedCodes(){const u=store.get('ms_used',[]);return Array.isArray(u)?u:[];}
+
+/* ============================================================
+   4. Assets: load, key out backgrounds, draw with fallbacks
+   ============================================================ */
+/* Sprites load from assets/cut/ first: pre-cut PNGs with real transparency, so they work even from file://.
+   If a cut file is missing, the original is loaded and keyed out in the browser (needs http://). */
+const FILES={
+  cup:['cut/cup.png','cup.png'],golden:['cut/golden.png','golden.png'],tumbler:['cut/tumbler.png','tumbler.png'],coldbrew:['cut/coldbrew.png','coldbrew.png'],
+  croissant:['cut/croissant.png','croissant.jpeg','croissant.png','croissant.jpg'],bun:['cut/bun.png','bun.jpeg','bun.png','bun.jpg'],toast:['cut/toast.png','toast.jpeg','toast.png','toast.jpg'],
+  cafe:['cafe light.png','cafe.png','cafe.jpg'],logo:['logo.png'],matcha:['cut/matcha.png','matcha.png','matcha.jpg','matcha.jpeg'],plushie:['cut/plushie.png','plushie.png','plushie.jpg','plushie.jpeg']
+};
+const KEYED=['cup','golden','tumbler','coldbrew','croissant','bun','toast','matcha','plushie']; // sprites that get their background removed when no cut file exists
+const SPR={};
+function loadImage(file){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('missing '+file));im.src='assets/'+file;});}
+async function loadFirst(list){for(const f of list){try{return await loadImage(f);}catch(e){}}return null;}
+/* Remove a flat background by flood-filling from the image edges, then crop to the opaque bounding box. */
+function keyOut(img){
+  const max=440,s=Math.min(1,max/Math.max(img.width,img.height));
+  const w=Math.max(2,Math.round(img.width*s)),h=Math.max(2,Math.round(img.height*s));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+  let id;try{id=x.getImageData(0,0,w,h);}catch(e){return {ok:true,src:img,w:img.width,h:img.height,blend:'multiply'};} // tainted canvas (file://): multiply hides white
+  const d=id.data,N=w*h;
+  let cr=0,cg=0,cb=0,ca=0;for(const i of [0,(w-1)*4,(h-1)*w*4,(N-1)*4]){cr+=d[i];cg+=d[i+1];cb+=d[i+2];ca+=d[i+3];}cr/=4;cg/=4;cb/=4;ca/=4;
+  const alphaMode=ca<16,tol=28; // tight enough that a cream label never joins the grey background
+  const dist=i=>alphaMode?(d[i+3]<24?0:999):Math.max(Math.abs(d[i]-cr),Math.abs(d[i+1]-cg),Math.abs(d[i+2]-cb));
+  const vis=new Uint8Array(N);const st=[];
+  for(let i=0;i<w;i++){st.push(i,N-w+i);}for(let j=0;j<h;j++){st.push(j*w,j*w+w-1);}
+  while(st.length){const p=st.pop();if(vis[p])continue;vis[p]=1;if(dist(p*4)>=tol)continue;d[p*4+3]=0;const px=p%w;if(px>0)st.push(p-1);if(px<w-1)st.push(p+1);if(p>=w)st.push(p-w);if(p<N-w)st.push(p+w);}
+  if(!alphaMode){ // soften the cut edge
+    for(let p=0;p<N;p++){if(d[p*4+3]===0)continue;const px=p%w;
+      const nb=(px>0&&d[(p-1)*4+3]===0)||(px<w-1&&d[(p+1)*4+3]===0)||(p>=w&&d[(p-w)*4+3]===0)||(p<N-w&&d[(p+w)*4+3]===0);
+      if(nb)d[p*4+3]=Math.round(clamp(dist(p*4)/(tol*1.6),0.3,1)*255);}
+  }
+  x.putImageData(id,0,0);
+  let minx=w,miny=h,maxx=-1,maxy=-1;
+  for(let p=0;p<N;p++){if(d[p*4+3]>8){const px=p%w,py=(p-px)/w;if(px<minx)minx=px;if(px>maxx)maxx=px;if(py<miny)miny=py;if(py>maxy)maxy=py;}}
+  if(maxx<0)return {ok:false};
+  const cw=maxx-minx+1,ch=maxy-miny+1;const out=document.createElement('canvas');out.width=cw;out.height=ch;
+  out.getContext('2d').drawImage(c,minx,miny,cw,ch,0,0,cw,ch);
+  let url=img.src;try{url=out.toDataURL('image/png');}catch(e){}
+  return {ok:true,src:out,w:cw,h:ch,url};
+}
+async function loadAssets(){
+  await Promise.all(Object.keys(FILES).map(async k=>{
+    const img=await loadFirst(FILES[k]);
+    if(!img){SPR[k]={ok:false};return;}
+    SPR[k]=KEYED.includes(k)&&!/\/cut\//.test(img.src)?keyOut(img):{ok:true,src:img,w:img.width,h:img.height,url:img.src};
+  }));
+  document.querySelectorAll('img[data-asset]').forEach(im=>{
+    const s=SPR[im.dataset.asset];
+    if(s&&s.ok&&s.url){im.src=s.url;}else{im.style.display='none';const ph=im.nextElementSibling;if(ph&&ph.classList.contains('ph'))ph.style.display='flex';}
+  });
+  renderHomeDrop();
+}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+/* Draw a sprite anchored at bottom-centre (cx,by). fit: 'fill' uses w×h, 'contain' keeps aspect inside w×h. */
+function drawSprite(ctx,key,cx,by,w,h,fit){
+  const s=SPR[key];
+  if(s&&s.ok){
+    let dw=w,dh=h;if(fit==='contain'){const sc=Math.min(w/s.w,h/s.h);dw=s.w*sc;dh=s.h*sc;}
+    ctx.save();if(s.blend)ctx.globalCompositeOperation=s.blend;ctx.drawImage(s.src,cx-dw/2,by-dh,dw,dh);ctx.restore();return;
+  }
+  fallbackShape(ctx,key,cx,by,w,h);
+}
+function fallbackShape(ctx,key,cx,by,w,h){
+  ctx.save();ctx.translate(cx,by);
+  if(['croissant','bun','toast'].includes(key)){
+    ctx.fillStyle=key==='toast'?'#D9A760':'#C98B3F';ctx.beginPath();ctx.ellipse(0,-h/2,w/2,h/2,0,0,TAU);ctx.fill();ctx.strokeStyle=COL.espresso;ctx.lineWidth=2;ctx.stroke();
+  }else{
+    const col={cup:COL.navy,golden:COL.brass,tumbler:COL.slate,coldbrew:'#D7B48A'}[key]||COL.navy;
+    ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(-w/2,-h);ctx.lineTo(w/2,-h);ctx.lineTo(w*0.4,0);ctx.lineTo(-w*0.4,0);ctx.closePath();ctx.fill();
+    ctx.fillStyle=COL.crema;ctx.fillRect(-w/2,-h*0.62,w,h*0.26);ctx.fillStyle=COL.espresso;ctx.fillRect(-w/2,-h,w,h*0.1);
+  }
+  ctx.restore();
+}
+/* Drop crate: rounded card, the cut-out item on a soft canary panel, DROP tag, glow while hanging. */
+function drawCrate(ctx,key,cx,by,size,hang,t){
+  const r=size*0.18,x=cx-size/2,y=by-size;
+  ctx.save();
+  if(hang){ctx.shadowColor='rgba(255,239,92,'+(0.6+0.4*Math.sin(t*4)).toFixed(2)+')';ctx.shadowBlur=28;}
+  ctx.fillStyle='#FFFFFF';rr(ctx,x,y,size,size,r);ctx.fill();ctx.shadowBlur=0;
+  const gl=ctx.createLinearGradient(x,y,x,y+size);gl.addColorStop(0,'#FFFBE8');gl.addColorStop(1,'#FFF0A6');ctx.fillStyle=gl;rr(ctx,x,y,size,size,r);ctx.fill();
+  const s=SPR[key],pad=size*0.1;
+  if(s&&s.ok){const sc=Math.min((size-pad*2)/s.w,(size-pad*2)/s.h),dw=s.w*sc,dh=s.h*sc;ctx.drawImage(s.src,x+(size-dw)/2,y+(size-dh)/2+pad*0.3,dw,dh);}
+  else{ctx.fillStyle=key==='matcha'?'#7FA86B':COL.navy;rr(ctx,x+pad,y+pad,size-pad*2,size-pad*2,r*0.6);ctx.fill();}
+  ctx.lineWidth=3;ctx.strokeStyle=COL.brass;rr(ctx,x+1.5,y+1.5,size-3,size-3,r);ctx.stroke();
+  ctx.fillStyle=COL.sapphire;rr(ctx,x+6,y+6,38,17,6);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='800 9.5px "Plus Jakarta Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('DROP',x+25,y+15);
+  ctx.restore();
+}
+
+/* ============================================================
+   5. Item types
+   ============================================================ */
+const TYPES={
+  cup:{w:1,top:.9,pts:1,name:'Cup'},
+  golden:{w:1,top:.9,pts:5,name:'Golden cup',glow:true},
+  tumbler:{w:1,top:.88,pts:3,name:'Reusable tumbler',swing:.75},
+  coldbrew:{w:1,top:.92,pts:3,name:'Iced cold brew',perfect:1.6},
+  croissant:{w:1.45,h:1.15,top:.6,pts:2,pastry:true,name:'Croissant'},
+  bun:{w:1.15,h:1.15,top:.75,pts:2,pastry:true,name:'Bun'},
+  toast:{w:1.2,h:1.15,top:.8,pts:2,pastry:true,name:'Toast'},
+  drop:{w:1.2,top:.92,pts:5,name:'Drop',square:true}
+};
+function makeItem(type,cupW,sprite){
+  const t=TYPES[type],sp=SPR[sprite||type],w=t.w*cupW;let h;
+  if(t.pastry)h=t.h*cupW;else if(t.square)h=w;else{const asp=sp&&sp.ok?sp.h/sp.w:1.5;h=w*clamp(asp,1.1,1.9);}
+  return {type,sprite:sprite||type,w,h,top:t.top*w,pts:t.pts,x:0,y:0,vx:0,vy:0,rot:0,rv:0,perfect:false,jig:Math.random()*TAU};
+}
+function drawItem(ctx,it,sx,sy,rot,hang,t){
+  ctx.save();ctx.translate(sx,sy);if(rot)ctx.rotate(rot);
+  const ty=TYPES[it.type];
+  if(it.type==='drop')drawCrate(ctx,it.sprite,0,0,it.w,hang,t||0);
+  else{if(ty.glow){ctx.shadowColor='rgba(184,137,59,.95)';ctx.shadowBlur=20+8*Math.sin((t||0)*5);}drawSprite(ctx,it.sprite,0,0,it.w,it.h,ty.pastry?'contain':'fill');}
+  ctx.restore();
+}
+
+/* ============================================================
+   6. Canvas sizing and the cafe photo (simulated camera)
+   ============================================================ */
+let W=window.innerWidth,H=window.innerHeight,DPR=1;
+const gC=$('gameCanvas'),gx=gC.getContext('2d'),hC=$('homeCanvas'),hx=hC.getContext('2d'),iC=$('introCanvas'),ix=iC.getContext('2d');
+function resize(){
+  DPR=clamp(window.devicePixelRatio||1,1,2.5);W=window.innerWidth;H=window.innerHeight;
+  [gC,hC,iC].forEach(c=>{c.width=Math.round(W*DPR);c.height=Math.round(H*DPR);c.style.width=W+'px';c.style.height=H+'px';});
+}
+window.addEventListener('resize',resize);resize();
+const TABLE_FRAC=0.72; // where the front table top sits in cafe light.png (fraction of its height)
+/* Sky colour by altitude above the roofline, in screen heights: daylight → deep blue → night → outer space. */
+const SKY_RAMP=[[0,[232,243,255]],[1,[191,221,251]],[2.3,[127,180,242]],[3.6,[61,120,216]],[5,[27,60,134]],[6.4,[12,26,68]],[8,[4,7,15]]];
+function skyAt(a){
+  let i=0;while(i<SKY_RAMP.length-2&&a>SKY_RAMP[i+1][0])i++;
+  const a0=SKY_RAMP[i][0],c0=SKY_RAMP[i][1],a1=SKY_RAMP[i+1][0],c1=SKY_RAMP[i+1][1],t=clamp((a-a0)/(a1-a0),0,1);
+  return 'rgb('+Math.round(lerp(c0[0],c1[0],t))+','+Math.round(lerp(c0[1],c1[1],t))+','+Math.round(lerp(c0[2],c1[2],t))+')';
+}
+/* Draw the cafe so its table top sits at tableY0 (+cam). The photo scrolls away with the camera; above its roofline the sky
+   takes over and darkens with altitude until it is outer space. Returns the screen y of the photo's top edge. */
+function drawCafe(ctx,tableY0,cam,fade){
+  const s=SPR.cafe,ok=!!(s&&s.ok);
+  const scale=ok?Math.max(W/s.w,tableY0/(TABLE_FRAC*s.h))*1.03:1,dw=ok?s.w*scale:W,dh=ok?s.h*scale:tableY0/TABLE_FRAC;
+  const top=tableY0+cam-TABLE_FRAC*dh,left=(W-dw)/2;
+  if(top>0){ // sky band from the roofline up to the top of the screen
+    const g=ctx.createLinearGradient(0,top,0,-20),n=7;
+    for(let k=0;k<=n;k++)g.addColorStop(k/n,skyAt((top+20)/H*(k/n)));
+    ctx.fillStyle=g;ctx.fillRect(-20,-20,W+40,top+21);
+  }
+  if(ok)ctx.drawImage(s.src,left,top,dw,dh);
+  if(ok&&fade){ // soften the roofline: the top of the photo dissolves into the sky
+    const fh=Math.min(dh*0.26,H*0.34),g2=ctx.createLinearGradient(0,top,0,top+fh);g2.addColorStop(0,'rgba(232,243,255,1)');g2.addColorStop(0.45,'rgba(232,243,255,.55)');g2.addColorStop(1,'rgba(232,243,255,0)');
+    ctx.fillStyle=g2;ctx.fillRect(left-1,top,dw+2,fh);}
+  if(!ok){ctx.fillStyle='#E9DCC6';ctx.fillRect(0,top,W,dh);ctx.fillStyle='#D8B98A';ctx.fillRect(0,tableY0+cam,W,dh*(1-TABLE_FRAC));}
+  if(top+dh<H){ctx.fillStyle='#CDB89E';ctx.fillRect(-20,top+dh-1,W+40,H-top-dh+22);}
+  return top;
+}
+/* Film grain pattern */
+const grainC=document.createElement('canvas');grainC.width=grainC.height=128;
+(()=>{const c=grainC.getContext('2d');const id=c.createImageData(128,128);for(let i=0;i<id.data.length;i+=4){const v=120+Math.random()*135;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}c.putImageData(id,0,0);})();
+let grainPat=null;
+function postFx(ctx,t,strength){
+  const g=ctx.createRadialGradient(W/2,H*0.45,Math.min(W,H)*0.35,W/2,H*0.5,Math.max(W,H)*0.78);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,'+(0.5*strength)+')');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  grainPat=grainPat||ctx.createPattern(grainC,'repeat');
+  if(grainPat){const ox=REDUCED?0:Math.floor(Math.random()*128),oy=REDUCED?0:Math.floor(Math.random()*128);
+    ctx.save();ctx.globalAlpha=0.065*strength;ctx.globalCompositeOperation='overlay';ctx.translate(-ox,-oy);ctx.fillStyle=grainPat;ctx.fillRect(0,0,W+128,H+128);ctx.restore();}
+}
+
+/* ============================================================
+   7. Screens, navigation, panels
+   ============================================================ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.toggle('active',s.id===id);s.scrollTop=0;});
+  document.body.dataset.screen=id.replace('s-','');
+}
+function openPanel(id){$(id).classList.add('show');}
+function closePanel(id){$(id).classList.remove('show');}
+document.querySelectorAll('.x[data-close]').forEach(b=>b.addEventListener('click',()=>closePanel(b.dataset.close)));
+document.querySelectorAll('.panel').forEach(p=>p.addEventListener('click',e=>{if(e.target===p)closePanel(p.id);}));
+
+/* ---------- 1. Name ---------- */
+const nameInput=$('nameInput');
+function submitName(){
+  const v=nameInput.value.trim();
+  if(v.length<2||v.length>16){$('nameErr').classList.add('show');nameInput.focus();return;}
+  $('nameErr').classList.remove('show');session.name=v;store.set('ms_name',v);
+  $('ticketHi').textContent='Hey, '+v+'!';$('codeInput').value='';$('codeErr').classList.remove('show');$('codeBtn').disabled=true;
+  showScreen('s-ticket');
+}
+$('nameBtn').addEventListener('click',submitName);
+nameInput.addEventListener('keydown',e=>{if(e.key==='Enter')submitName();});
+$('changeName').addEventListener('click',()=>{nameInput.value='';$('changeName').style.display='none';nameInput.focus();});
+
+/* ---------- 2. Play ticket ---------- */
+const codeInput=$('codeInput');
+codeInput.addEventListener('input',()=>{
+  codeInput.value=codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  $('codeBtn').disabled=codeInput.value.length!==6;$('codeErr').classList.remove('show');
+});
+function submitCode(){
+  const code=codeInput.value;if(code.length!==6)return;
+  if(usedCodes().includes(code)){$('codeErr').classList.add('show');return;}
+  session.ticket=code;goHome();
+}
+$('codeBtn').addEventListener('click',submitCode);
+codeInput.addEventListener('keydown',e=>{if(e.key==='Enter')submitCode();});
+$('sampleCode').addEventListener('click',()=>{codeInput.value=randCode('MS').replace('-','');codeInput.dispatchEvent(new Event('input'));});
+
+/* ---------- 3. Homepage ---------- */
+function renderHomeDrop(){
+  const d=activeDrop(),el=$('homeDrop'),im=$('homeDropImg'),s=SPR[d?d.key:'croissant'];
+  if(s&&s.ok&&s.url){im.src=s.url;im.style.display='';}else im.style.display='none';
+  $('homeDropTitle').textContent=d?'New drop alert':'This week\'s promo';
+  $('homeDropText').textContent=d?d.alert:PASTRY_PROMO.alert;
+  $('howPromo').innerHTML='<span class="n">2</span>'+(d?'Land the '+escapeHtml(d.short.toLowerCase())+' on your 10th stack. It\'s free.':'Hit 20 cups and a pastry is on us.');
+  el.classList.add('show');
+}
+function goHome(){
+  $('homeTicket').textContent=session.ticket;$('homeWeek').textContent=weekRange();renderBoard($('homeBoard'),session.name);renderHomeDrop();
+  startHome();showScreen('s-home');
+}
+$('playBtn').addEventListener('click',()=>{
+  const u=usedCodes();if(!u.includes(session.ticket)){u.push(session.ticket);store.set('ms_used',u.slice(-500));}
+  startGame();
+});
+$('rewardsBtn').addEventListener('click',()=>openRewards());
+$('rewardsBtn2').addEventListener('click',()=>openRewards());
+$('dropsBtn').addEventListener('click',()=>{renderDropOpts();openPanel('p-drops');});
+$('againBtn').addEventListener('click',()=>{codeInput.value='';$('codeBtn').disabled=true;$('codeErr').classList.remove('show');showScreen('s-ticket');});
+function openRewards(){
+  const list=getRewards(),el=$('rewardsList'),open=list.filter(r=>!r.claimed),past=list.filter(r=>r.claimed);
+  $('rewardSum').innerHTML=`<div><b>${lifetimePoints().toLocaleString()}</b><span>points earned</span></div><div><b>${open.length}</b><span>ready to claim</span></div><div><b>${past.length}</b><span>claimed</span></div>`;
+  let html=open.length?'<div class="sectionLabel">Ready to claim</div>'+open.map(r=>rewardCard(r,true)).join(''):'<p class="empty">Nothing waiting right now. Stack 20 cups in a run for a free pastry.</p>';
+  if(past.length)html+='<div class="sectionLabel">Claimed</div>'+past.map(r=>rewardCard(r,false)).join('');
+  el.innerHTML=html;mountQRs(el);openPanel('p-rewards');
+}
+function renderDropOpts(){
+  const cur=activePromo();
+  const opts=[{key:'pastry',title:'Free pastry',sub:'Default promo · 20 cups in one run',img:'croissant'},DROPS.matcha,DROPS.plushie];
+  $('dropOpts').innerHTML=opts.map(o=>{
+    const s=SPR[o.img||o.key];const img=s&&s.ok&&s.url?`<img src="${s.url}" alt="">`:`<div class="ph" style="display:flex">${escapeHtml(o.short||o.title)}</div>`;
+    return `<button class="dropOpt ${cur===o.key?'on':''}" data-key="${o.key}">${img}<div><b>${escapeHtml(o.title)}</b><small>${escapeHtml(o.sub)}</small></div><span class="chk"></span></button>`;
+  }).join('');
+  $('dropOpts').querySelectorAll('.dropOpt').forEach(b=>b.addEventListener('click',()=>{store.set('ms_drop',b.dataset.key);renderDropOpts();renderHomeDrop();}));
+}
+
+/* ---------- Homepage AR moment: a tower drops onto the table ---------- */
+const HOME={t:0,items:[]};
+function startHome(){
+  HOME.t=0;const cupW=clamp(W*0.13,40,60);let y=0;
+  // the wall logo in the photo sits above ~0.33H on phones, so the tower stops before it
+  const limit=H*0.56-H*0.33;HOME.items=[];
+  for(const k of ['croissant','cup','bun','cup','toast','golden']){const it=makeItem(k,cupW);if(y+it.h>limit&&HOME.items.length>=2)break;it.y=y;y+=it.h;it.delay=0.4*HOME.items.length+0.3;HOME.items.push(it);}
+}
+function drawHome(dt){
+  HOME.t+=dt;const t=HOME.t,x=hx;x.setTransform(DPR,0,0,DPR,0,0);
+  const tableY=H*0.56;drawCafe(x,tableY,0);
+  // surface marker (AR style)
+  x.save();x.strokeStyle='rgba(31,95,224,.6)';x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.ellipse(W/2,tableY+6,W*0.22,W*0.05,0,0,TAU);x.stroke();x.restore();
+  x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.ellipse(W/2+2,tableY+4,HOME.items[0]?HOME.items[0].w*0.6:40,10,0,0,TAU);x.fill();
+  for(const it of HOME.items){
+    const a=clamp((t-it.delay)/0.38,0,1);if(a<=0)continue;
+    const e=a*a,sy=lerp(-it.h-40,tableY-it.y,e);
+    let sq=1;const b=t-it.delay-0.38;if(a>=1&&b<0.16)sq=1-0.07*Math.sin(b/0.16*Math.PI);
+    x.save();x.translate(W/2,sy);x.scale(1/sq,sq);drawItem(x,it,0,0,0,false,t);x.restore();
+  }
+  postFx(x,t,0.5);
+}
+
+/* ---------- Welcome and code screens: a line-up of treats drops in along the bottom ---------- */
+const INTRO={t:0,items:[],screen:''};
+function startIntro(){
+  INTRO.t=0;const n=6,cupW=clamp(W/9,36,64),gap=Math.min(W/n,cupW*1.9),x0=W/2-gap*(n-1)/2;
+  INTRO.items=['cup','toast','golden','croissant','tumbler','bun'].map((k,i)=>{const it=makeItem(k,cupW);it.x=x0+gap*i;it.delay=0.25*i+0.2;it.ph=rnd(0,TAU);return it;});
+}
+function drawIntro(dt){
+  const scr=document.body.dataset.screen;if(INTRO.screen!==scr){INTRO.screen=scr;startIntro();}
+  INTRO.t+=dt;const t=INTRO.t,x=ix;x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,W,H);
+  const sab=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sab'))||0,shelf=H-sab-22;
+  for(const it of INTRO.items){
+    const a=clamp((t-it.delay)/0.42,0,1);if(a<=0)continue;
+    const e=a*a,sy=lerp(shelf-H*0.35,shelf,e);
+    let sq=1;const b=t-it.delay-0.42;if(a>=1&&b<0.18)sq=1-0.09*Math.sin(b/0.18*Math.PI);
+    const bob=a>=1&&!REDUCED?Math.sin(t*1.6+it.ph)*1.5:0;
+    x.fillStyle='rgba(31,58,95,'+(0.18*a).toFixed(2)+')';x.beginPath();x.ellipse(it.x,shelf+3,it.w*0.5,it.w*0.1,0,0,TAU);x.fill();
+    x.save();x.translate(it.x,sy+bob);x.scale(1/sq,sq);drawItem(x,it,0,0,0,false,t);x.restore();
+  }
+}
+
+/* ============================================================
+   8. Game state
+   ============================================================ */
+let G=null;
+const chaseEl=$('chase'),chaseN=$('chaseN'),chaseTxt=$('chaseTxt'),chaseIco=$('chaseIco'),cupsEl=$('cups'),scoreEl=$('score'),streakEl=$('streak'),chipsEl=$('chips'),spillsEl=$('spills'),windEl=$('wind'),bannerEl=$('banner'),arPill=$('arPill'),hintEl=$('hint'),passEl=$('passNote');
+const LABELS=['Morning rush','Lunch crowd','Afternoon pick-me-up','Closing time'];
+const SKY_BANNER={cloud:'Clouds rolling in',birds:'Birds overhead',balloons:'Party balloons',hotair:'Hot air balloons drifting by',plane:'Jet wash adds a gust'};
+const PUSH={cloud:0,birds:70,balloons:110,hotair:180,plane:240};
+
+function startGame(){
+  const drop=activeDrop();
+  G={state:'play',t:0,cupW:clamp(W*0.21,60,96),baseY:H*0.82,railY:($('safeProbe').offsetHeight||0)+H*0.1,ropeL:H*0.2,cam:0,
+    items:[],loose:[],history:[],score:0,cups:0,streak:0,bestStreak:0,spills:0,passed:new Set(),near:new Set(),passedCount:0,prevBest:playerBest(session.name),
+    drop,dropState:drop?'pending':'none',pastryOn:!drop,n:0,hanging:null,falling:null,spawnIn:0.7,swing:{phase:0,omega:1.7},
+    wind:{cur:0,target:0,timer:2.5},sway:{x:0,v:0},pastries:0,lastPastry:false,sky:[],skyTimer:2.5,seen:{},markerY:{},
+    particles:[],popups:[],rain:null,snow:null,light:{t:5,a:0},arT:0,topY:0,pastryUnlocked:false,endIn:-1,
+    stars:Array.from({length:90},()=>({x:Math.random(),y:Math.random(),s:rnd(0.6,1.9),ph:rnd(0,TAU)}))};
+  G.cupH=makeItem('cup',G.cupW).h;
+  session.codesThisRun=[];bannerQ.length=0;bannerBusy=false;bannerEl.classList.remove('show','big');passEl.classList.remove('show','win');
+  chipsEl.innerHTML='';arPill.classList.remove('locked');arPill.querySelector('span').textContent='AR · Scanning';
+  hintEl.classList.add('show');SFX.start();
+  updateHUD();updateChase();showScreen('s-game');
+}
+function sY(wy){return G.baseY+G.cam-wy;}
+function wY(sy){return G.baseY+G.cam-sy;}
+function swayDx(it){const f=G.topY>0?(it.y+it.h)/G.topY:0;return G.sway.x*f*f;}
+function perfectTol(it){return 0.21*G.cupW*(1-0.4*clamp(G.cups/40,0,1))*(TYPES[it.type].perfect||1)*(G.rain?0.7:1);}
+function windStrength(){return G.cups<9?0:clamp((G.cups-8)/28,0,1);}
+function hangPos(){const th=0.5*Math.sin(G.swing.phase);return {th,x:W/2+G.ropeL*Math.sin(th),y:G.railY+G.ropeL*Math.cos(th)};}
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  const c=String(G.cups);
+  if(cupsEl.firstChild.nodeValue!==c){cupsEl.firstChild.nodeValue=c;cupsEl.classList.add('bump');setTimeout(()=>cupsEl.classList.remove('bump'),160);}
+  cupsEl.lastChild.textContent=G.cups===1?'cup':'cups';
+  scoreEl.textContent=G.score+' pts';
+  streakEl.textContent=G.streak>=2?'Perfect streak ×'+G.streak:'';
+  spillsEl.innerHTML=[0,1,2].map(i=>`<svg viewBox="0 0 20 22" class="${i<G.spills?'lost':''}"><path d="M3 4h14l-2 17H5z" fill="#1F5FE0"/><rect x="2" y="1" width="16" height="4.5" rx="1.6" fill="#FFEF5C"/></svg>`).join('');
+  const w=G.wind.cur,a=Math.abs(w);const label=a<0.12?'Calm':a<0.45?'Breezy':'Gusty';
+  windEl.innerHTML='<b>'+label+'</b>'+(a<0.12?'':' '+(w>0?'→':'←'));
+}
+/* The next player above you on the board that you have not passed yet (and have not beaten in an earlier run). */
+function nextAbove(){return getBoard().entries.filter(e=>e.name!==session.name&&e.cups>=G.cups&&e.cups>=G.prevBest&&!G.passed.has(e.name)).sort((a,b)=>a.cups-b.cups)[0]||null;}
+/* Goal card (mid-right): the drop, else the pastry, else the next player to pass. One promo at a time. */
+function updateChase(){
+  let n,txt,ico;const d=G.drop;
+  if(d&&G.dropState==='pending'&&G.cups<10){n=10-G.cups;txt='to the '+d.short.toLowerCase()+' drop';ico=SPR[d.key]&&SPR[d.key].url?'<img src="'+SPR[d.key].url+'" alt="">':'<span>🎁</span>';}
+  else if(G.pastryOn&&G.cups<20){n=20-G.cups;txt='to a free pastry';ico=SPR.croissant&&SPR.croissant.url?'<img src="'+SPR.croissant.url+'" alt="">':'<span>🥐</span>';}
+  else{const o=nextAbove();
+    if(o){n=o.cups-G.cups+1;txt='to pass '+o.name.split(' ')[0];ico='<img src="'+avatarSVG(o.name)+'" alt="">';}
+    else{n='👑';txt='Top of the board!';ico='<span>🏆</span>';}}
+  chaseN.textContent=n;chaseTxt.textContent=txt;chaseIco.innerHTML=ico;chaseEl.classList.toggle('pulse',typeof n==='number'&&n<=3);
+}
+function addChip(text){const c=document.createElement('div');c.className='chip';c.innerHTML='<i></i>'+escapeHtml(text);chipsEl.appendChild(c);}
+const bannerQ=[];let bannerBusy=false,bannerTimer=0;
+function showBanner(text,opt){bannerQ.push(Object.assign({text,dur:1800},opt||{}));if(!bannerBusy)nextBanner();}
+function nextBanner(){
+  const b=bannerQ.shift();if(!b){bannerBusy=false;return;}
+  bannerBusy=true;bannerEl.innerHTML=escapeHtml(b.text)+(b.sub?'<small>'+escapeHtml(b.sub)+'</small>':'');
+  bannerEl.classList.toggle('big',!!b.big);bannerEl.classList.add('show');
+  clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{bannerEl.classList.remove('show');setTimeout(nextBanner,260);},b.dur);
+}
+function flash(){const f=$('flash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),90);}
+function unlockPop(key){const s=SPR[key],u=$('unlock');if(!(s&&s.ok&&s.url))return;$('unlockImg').src=s.url;u.classList.add('show');setTimeout(()=>u.classList.remove('show'),4600);}
+function confetti(sx,sy,count){
+  const cols=[COL.sapphire,COL.canary,'#FF8FAB','#7FE0B0','#FFB86B','#fff'];
+  for(let i=0;i<count;i++)G.particles.push({x:sx,y:sy,vx:rnd(-280,280),vy:rnd(-560,-160),rot:rnd(0,TAU),rv:rnd(-8,8),w:rnd(5,9),h:rnd(8,14),col:pick(cols),life:rnd(1.3,2.3),t:0});
+}
+function popup(text,x,y,big,small){G.popups.push({text,x,y,t:0,dur:1.2,big,small});}
+
+/* ---------- Rewards during play ---------- */
+function unlockPastry(){
+  G.pastryUnlocked=true;const r={code:randCode('MS-PASTRY'),type:'pastry',label:'Free pastry',name:session.name,cups:G.cups,pts:G.score,at:Date.now()};
+  addReward(r);session.codesThisRun.push(r);
+  confetti(W/2,H*0.42,REDUCED?30:160);flash();vibrate([40,60,40]);SFX.celebrate();
+  showBanner('Free pastry unlocked!',{big:true,sub:'Code saved to My rewards. Keep the tower climbing.',dur:4800});addChip('Free pastry');unlockPop('croissant');
+}
+function unlockDrop(){
+  const d=G.drop;const r={code:randCode(d.prefix),type:d.key,label:d.label,name:session.name,cups:G.cups,pts:G.score,at:Date.now()};
+  addReward(r);session.codesThisRun.push(r);
+  confetti(W/2,H*0.45,REDUCED?40:220);flash();vibrate([40,60,40,60,80]);SFX.celebrate();
+  showBanner(d.label+' unlocked!',{big:true,sub:'Show the code to your barista. The run goes on!',dur:5200});addChip(d.label);unlockPop(d.key);
+}
+/* Passing notes at the top: "2 cups from passing Diego", then "You passed Diego!" with their avatar. */
+let passTimer=0;
+function showPass(name,text,sub,win){
+  $('passAv').src=avatarSVG(name);$('passTxt').innerHTML=escapeHtml(text)+(sub?'<small>'+escapeHtml(sub)+'</small>':'');
+  passEl.classList.toggle('win',!!win);passEl.classList.add('show');clearTimeout(passTimer);passTimer=setTimeout(()=>passEl.classList.remove('show'),win?3200:2400);
+}
+function checkPassing(){
+  for(const e of getBoard().entries){
+    if(e.name===session.name||G.passed.has(e.name))continue;
+    if(G.cups>e.cups&&e.cups>=G.prevBest){G.passed.add(e.name);G.passedCount++;
+      const rank=rankOf(session.name,G.cups);confetti(W/2,H*0.45,REDUCED?25:110);vibrate([30,40,30]);SFX.pass();
+      showPass(e.name,'You passed '+e.name+'!','You\'re #'+rank+' on the board',true);}
+  }
+  const o=nextAbove();
+  if(o&&!G.near.has(o.name)){const n=o.cups-G.cups+1;if(n<=3){G.near.add(o.name);SFX.near();showPass(o.name,plural(n,'cup','cups')+' from passing '+o.name,o.cups+' cups this week',false);}}
+}
+
+/* ============================================================
+   9. Game logic: spawn, release, landing, spills, topple
+   ============================================================ */
+function spawnNext(){
+  const n=++G.n;let type='cup',sprite=null;
+  if(n%10===0){
+    if(n===10&&G.drop&&G.dropState==='pending'){type='drop';sprite=G.drop.key;showBanner('Drop incoming: '+G.drop.short+'!',{sub:'Land it and it\'s yours',dur:2200});SFX.incoming();}
+    else{type=['golden','tumbler','coldbrew'][((n/10)-1)%3];showBanner(TYPES[type].name+' incoming!');SFX.incoming();}
+    G.lastPastry=false;
+  }else if(n>=5&&!G.lastPastry&&Math.random()<lerp(0.12,0.30,clamp((n-5)/35,0,1))){type=pick(['croissant','bun','toast']);G.lastPastry=true;}
+  else G.lastPastry=false;
+  const it=makeItem(type,G.cupW,sprite);G.hanging=it;G.swing.phase=0;
+  G.swing.omega=1.7*Math.min(1.8,1+0.05*G.cups)*(TYPES[type].swing||1);
+}
+function release(){
+  if(!G||G.state!=='play'||!G.hanging||G.falling)return;
+  const p=hangPos(),it=G.hanging;G.hanging=null;
+  const dth=0.5*G.swing.omega*Math.cos(G.swing.phase);
+  it.x=p.x;it.y=wY(p.y+it.h);it.vx=G.ropeL*dth*Math.cos(p.th)*0.35;it.vy=0;it.rot=p.th*0.35;
+  G.falling=it;hintEl.classList.remove('show');
+}
+function handleLanding(f,sup,supX,supY,supTop){
+  const off=f.x-supX,limit=0.25*(f.w+supTop);
+  if(Math.abs(off)>limit){spill(f,supX);return;}
+  G.falling=null;f.y=supY;f.rot=0;
+  const baseX=sup?sup.x:W/2,perfect=Math.abs(off)<=perfectTol(f);
+  f.perfect=perfect;f.x=perfect?baseX:baseX+off;
+  G.items.push(f);G.cups++;G.history.push({type:f.type,sprite:f.sprite,offR:(f.x-W/2)/G.cupW,perfect});G.topY=supY+f.h;if(TYPES[f.type].pastry)G.pastries++;
+  G.sway.v+=off*3+f.vx*0.15;
+  let pts=f.pts,label;
+  if(perfect){G.streak++;G.bestStreak=Math.max(G.bestStreak,G.streak);pts+=Math.min(5,G.streak);label='Perfect +'+pts;SFX.perfect();}
+  else{G.streak=0;label='+'+pts;SFX.land();}
+  G.score+=pts;popup(label,f.x,G.topY,perfect);
+  if(f.type==='tumbler')popup('One less cup in the landfill',f.x,G.topY+34,false,true);
+  if(f.type==='drop'){G.dropState='landed';unlockDrop();}
+  if(G.cups%10===0){G.markerY[G.cups]=G.topY;if(G.cups===10)showBanner('Past the roof. The sky opens up!');}
+  if(G.pastryOn&&G.cups===20&&!G.pastryUnlocked)unlockPastry();
+  checkPassing();updateHUD();updateChase();
+  const k=checkBalance();
+  if(k>=0){startTopple(k,'Timber! The tower tipped.');return;}
+  G.spawnIn=(f.type==='drop'||(G.pastryOn&&G.cups===20))?1.1:0.3;
+}
+function spill(f,supX){
+  G.falling=null;const dir=f.x>=supX?1:-1;f.vx+=dir*150;f.rv=dir*rnd(3,5);G.loose.push(f);
+  G.spills++;G.streak=0;SFX.spill();vibrate(20);popup('Spill',f.x,f.y+f.h,false,false);
+  if(f.type==='drop'){G.dropState='missed';showBanner('So close! Next order, next chance.',{dur:2400});}
+  updateHUD();updateChase();
+  if(G.spills>=3){showBanner('Three spills. What a run!',{dur:2000});endGame(1.2);}else G.spawnIn=0.5;
+}
+function checkBalance(){
+  const its=G.items;
+  for(let i=0;i<its.length-1;i++){let s=0,c=0;for(let j=i+1;j<its.length;j++){s+=its[j].x;c++;}
+    if(Math.abs(s/c-its[i].x)>(its[i].w+its[i].top)/4)return i+1;}
+  return -1;
+}
+function startTopple(k,msg){
+  const its=G.items;let s=0;for(let j=k;j<its.length;j++)s+=its[j].x;
+  const dir=Math.sign(s/(its.length-k)-its[k-1].x)||1;
+  for(const it of its.splice(k)){it.vx=dir*rnd(40,150);it.vy=rnd(0,80);it.rv=dir*rnd(1.5,4);G.loose.push(it);}
+  G.topY=its.length?its[its.length-1].y+its[its.length-1].h:0;
+  G.hanging=null;G.falling=null;SFX.spill();vibrate([60,40,60]);showBanner(msg,{dur:2000});endGame(1.9);
+}
+function endGame(delay){G.state='ending';G.endIn=delay;}
+function finishRun(){
+  G.state='done';rainStop();SFX.end();submitScore(session.name,G.cups,G.score);addPoints(G.score);
+  const rank=rankOf(session.name,G.cups);SHARE.run=captureRun(rank);
+  $('overCups').textContent=G.cups;$('overCaption').textContent=plural(G.score,'point','points')+' · '+session.name;
+  $('stScore').textContent=G.score;$('stStreak').textContent=G.bestStreak;$('stPassed').textContent=G.passedCount;$('stRank').textContent='#'+rank;
+  $('topNote').classList.toggle('show',rank===1&&G.cups>0);
+  const codes=session.codesThisRun,el=$('overCodes');
+  el.innerHTML=codes.length?codes.map(r=>rewardCard(r,true)).join(''):'<p class="empty">'+(G.pastryOn?'No codes this run. Hit 20 cups for a free pastry.':'No codes this run. Land the drop on your 10th stack next time.')+'</p>';
+  mountQRs(el);$('overWeek').textContent=weekRange();renderBoard($('overBoard'),session.name);
+  showScreen('s-over');
+}
+
+/* ---------- Sky objects and weather ---------- */
+function spawnSky(){
+  const n=G.cups,kinds=['cloud','birds'];
+  if(n>=13)kinds.push('balloons');if(n>=18)kinds.push('hotair');if(n>=24)kinds.push('plane');
+  const kind=pick(kinds),dir=Math.random()<0.5?1:-1;
+  const speed={cloud:rnd(14,28),birds:rnd(90,140),balloons:rnd(30,50),hotair:rnd(22,36),plane:rnd(300,380)}[kind];
+  G.sky.push({kind,dir,x:dir>0?-160:W+160,y:G.topY+rnd(-0.05*H,0.45*H),vx:dir*speed,vy:kind==='balloons'?18:kind==='hotair'?8:0,t:0,pushed:false,s:rnd(0.85,1.2)});
+  if(kind==='birds')SFX.birds();
+  if(!G.seen[kind]){G.seen[kind]=true;showBanner(SKY_BANNER[kind],{dur:1600});}
+}
+function updateSky(dt){
+  if(G.cups>=10){G.skyTimer-=dt;if(G.skyTimer<=0){spawnSky();G.skyTimer=rnd(2.4,4.2)/Math.min(4,1+0.09*(G.cups-10));}}
+  const top=G.items[G.items.length-1],topX=top?top.x+G.sway.x:W/2;
+  for(const o of G.sky){
+    o.t+=dt;o.x+=o.vx*dt+((o.kind==='cloud'||o.kind==='balloons')?G.wind.cur*25*dt:0);o.y+=o.vy*dt;
+    if(!o.pushed&&top&&Math.abs(o.x-topX)<60&&Math.abs(o.y-G.topY)<0.35*H){o.pushed=true;G.sway.v+=o.dir*PUSH[o.kind]*(REDUCED?0.6:1);if(o.kind==='plane')G.wind.cur+=o.dir*0.5;}
+  }
+  G.sky=G.sky.filter(o=>o.x>-400&&o.x<W+400&&sY(o.y)<H+200&&sY(o.y)>-600);
+  const rainOn=G.cups>=14&&G.cups<=26,snowOn=G.cups>=30&&G.cups<=48;
+  if(rainOn&&!G.rain){G.rain=Array.from({length:REDUCED?30:70},()=>({x:Math.random()*W,y:Math.random()*H,l:rnd(10,22),s:rnd(520,820)}));showBanner('Rain! The perfect zone shrinks.',{dur:1800});rainStart();}
+  if(!rainOn&&G.rain){G.rain=null;rainStop();}
+  if(snowOn&&!G.snow){G.snow=Array.from({length:REDUCED?30:80},()=>({x:Math.random()*W,y:Math.random()*H,r:rnd(1.5,3.5),s:rnd(40,90),ph:rnd(0,TAU)}));showBanner('Snow! Hold on, the gusts get stronger.',{dur:1800});}
+  if(!snowOn)G.snow=null;
+  if(G.rain)for(const d of G.rain){d.y+=d.s*dt;d.x+=G.wind.cur*120*dt;if(d.y>H){d.y=-20;d.x=Math.random()*W;}if(d.x<-10)d.x+=W+20;if(d.x>W+10)d.x-=W+20;}
+  if(G.snow)for(const d of G.snow){d.y+=d.s*dt;d.x+=(Math.sin(G.t*1.5+d.ph)*20+G.wind.cur*70)*dt;if(d.y>H){d.y=-10;d.x=Math.random()*W;}if(d.x<-10)d.x+=W+20;if(d.x>W+10)d.x-=W+20;}
+  if(G.rain&&G.cups>=18&&G.cups<=22){G.light.t-=dt;if(G.light.t<=0){G.light.t=rnd(4,9);G.light.a=REDUCED?0.25:0.7;SFX.thunder();}}
+  G.light.a=Math.max(0,G.light.a-dt*2.5);
+}
+
+/* ---------- Per-frame update ---------- */
+function updateGame(dt){
+  if(!G||G.state==='done')return;
+  G.t+=dt;G.arT+=dt;
+  if(G.arT>=1.5&&!arPill.classList.contains('locked')){arPill.classList.add('locked');arPill.querySelector('span').textContent='AR · Surface locked';}
+  if(G.state==='play'){
+    if(!G.hanging&&!G.falling){G.spawnIn-=dt;if(G.spawnIn<=0)spawnNext();}
+    if(G.hanging)G.swing.phase+=G.swing.omega*dt;
+  }
+  // wind
+  const w=G.wind;w.timer-=dt;
+  if(w.timer<=0){w.timer=rnd(3,6);w.target=rnd(-1,1)*windStrength()*(G.snow?1.6:1);if(Math.abs(w.target)>0.5)SFX.gust();}
+  w.cur=lerp(w.cur,w.target,1-Math.exp(-dt*1.1));
+  // tower sway: spring with wind force; pastries loosen it
+  const hf=clamp(G.items.length/30,0,1),pf=Math.min(1.6,1+0.15*G.pastries);
+  const F=w.cur*180*hf*pf*(G.snow?1.4:1),k=16/Math.sqrt(pf);
+  G.sway.v+=(-k*G.sway.x-2.0*G.sway.v+F)*dt;G.sway.x+=G.sway.v*dt;
+  if(G.state==='play'&&G.items.length>=15&&Math.abs(G.sway.x)>G.cupW*1.0){startTopple(Math.max(1,Math.floor(G.items.length/2)),'Whoosh! The wind took it.');}
+  // falling item
+  const g=2.2*H;
+  if(G.falling){
+    const f=G.falling;f.vy-=g*dt;f.vx+=w.cur*320*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.rot=lerp(f.rot,clamp(f.vx/900,-.3,.3),dt*4);
+    let supY=0,supX=W/2,supTop=W*0.8,sup=null;
+    if(G.items.length){sup=G.items[G.items.length-1];supY=sup.y+sup.h;supX=sup.x+swayDx(sup);supTop=sup.top;}
+    if(f.y<=supY&&f.vy<0)handleLanding(f,sup,supX,supY,supTop);
+  }
+  for(const it of G.loose){it.vy-=g*dt;it.x+=it.vx*dt;it.y+=it.vy*dt;it.rot+=it.rv*dt;}
+  G.loose=G.loose.filter(it=>sY(it.y)<H+400);
+  updateSky(dt);
+  // camera: keep the tower top ~60% down the screen
+  const target=Math.max(0,G.topY-0.2*H);G.cam+=(target-G.cam)*Math.min(1,dt*4);
+  // particles and popups
+  for(const p of G.particles){p.t+=dt;p.vy+=700*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.99;p.rot+=p.rv*dt;}
+  G.particles=G.particles.filter(p=>p.t<p.life);
+  for(const p of G.popups)p.t+=dt;G.popups=G.popups.filter(p=>p.t<p.dur);
+  if(G.state==='ending'){G.endIn-=dt;if(G.endIn<=0)finishRun();}
+  if(G.t%0.25<dt)updateHUD();
+}
+
+/* ============================================================
+   10. Rendering
+   ============================================================ */
+function drawSkyObject(x,o,t,night){
+  const sx=o.x,sy=sY(o.y),s=o.s;
+  x.save();x.translate(sx,sy);x.scale(s,s);
+  if(o.kind==='cloud'){
+    x.fillStyle='rgba(255,255,255,'+(0.95-0.5*night)+')';
+    [[0,0,26],[24,-8,22],[-24,-4,19],[6,-18,19],[-8,-14,16]].forEach(c=>{x.beginPath();x.arc(c[0],c[1],c[2],0,TAU);x.fill();});
+  }else if(o.kind==='birds'){
+    x.strokeStyle='rgba(59,42,32,'+(0.9-0.3*night)+')';x.lineWidth=2;x.lineCap='round';
+    [[0,0],[-18,9],[18,9],[-36,18],[36,18]].forEach((b,i)=>{const fl=Math.sin(t*12+i*1.3)*4;const bx=b[0]*(o.dir>0?1:-1),by=b[1];
+      x.beginPath();x.moveTo(bx-8,by);x.quadraticCurveTo(bx-4,by-fl,bx,by);x.quadraticCurveTo(bx+4,by-fl,bx+8,by);x.stroke();});
+  }else if(o.kind==='balloons'){
+    const bob=Math.sin(t*2)*3;x.strokeStyle='rgba(243,233,215,.7)';x.lineWidth=1;
+    [[-15,-34,COL.navy],[0,-44,COL.brass],[15,-32,COL.crema]].forEach(b=>{x.beginPath();x.moveTo(0,0);x.lineTo(b[0],b[1]+bob+12);x.stroke();
+      x.fillStyle=b[2];x.beginPath();x.ellipse(b[0],b[1]+bob,11,13,0,0,TAU);x.fill();});
+  }else if(o.kind==='hotair'){
+    x.save();x.beginPath();x.ellipse(0,-78,32,40,0,0,TAU);x.clip();
+    for(let i=0;i<8;i++){x.fillStyle=i%2?COL.brass:COL.navy;x.fillRect(-32+i*8,-120,8,84);}x.restore();
+    x.strokeStyle=COL.espresso;x.lineWidth=1.2;x.beginPath();x.moveTo(-14,-44);x.lineTo(-8,-10);x.moveTo(14,-44);x.lineTo(8,-10);x.stroke();
+    x.fillStyle=COL.espresso;rr(x,-9,-10,18,13,3);x.fill();
+  }else if(o.kind==='plane'){
+    const d=o.dir;const tg=x.createLinearGradient(-d*300,0,-d*20,0);tg.addColorStop(0,'rgba(243,233,215,0)');tg.addColorStop(1,'rgba(243,233,215,.75)');
+    x.strokeStyle=tg;x.lineWidth=5;x.lineCap='round';x.beginPath();x.moveTo(-d*300,2);x.lineTo(-d*20,2);x.stroke();
+    x.scale(d,1);x.fillStyle=COL.crema;x.beginPath();x.ellipse(0,0,30,7,0,0,TAU);x.fill();
+    x.fillStyle=COL.slate;x.beginPath();x.moveTo(-4,-2);x.lineTo(-22,-18);x.lineTo(-30,-18);x.lineTo(-14,2);x.closePath();x.fill();
+    x.beginPath();x.moveTo(2,-1);x.lineTo(-10,14);x.lineTo(-20,14);x.lineTo(-8,-1);x.closePath();x.fill();
+    x.fillStyle=COL.navy;x.beginPath();x.moveTo(-30,-14);x.lineTo(-22,-14);x.lineTo(-18,0);x.lineTo(-30,0);x.closePath();x.fill();
+  }
+  x.restore();
+}
+function drawGame(){
+  if(!G)return;const x=gx,t=G.t;x.setTransform(DPR,0,0,DPR,0,0);
+  const dx=REDUCED?0:Math.sin(t*0.6)*3,dy=REDUCED?0:Math.cos(t*0.8)*2;
+  x.save();x.translate(dx,dy);
+  // photo, then the sky above its roofline. Altitude (screen heights above the roof, at mid-screen) drives the glow and the stars.
+  const photoTop=drawCafe(x,G.baseY,G.cam,true);
+  const alt=(photoTop-H*0.5)/H,golden=Math.exp(-Math.pow(alt-2.6,2)/0.9),night=clamp((alt-4.2)/2.5,0,1);
+  if(photoTop>0){for(const s of G.stars){const yy=s.y*H;if(yy>photoTop)continue;const a=clamp(((photoTop-yy)/H-4.6)/2,0,1);if(a<=0)continue;
+    const tw=0.6+0.4*Math.sin(t*2+s.ph);x.fillStyle='rgba(255,255,255,'+(a*tw).toFixed(2)+')';x.beginPath();x.arc(s.x*W,yy,s.s,0,TAU);x.fill();}}
+  // AR scan dots on the table
+  if(G.arT<2.2){
+    const a=G.arT<1.5?1:1-(G.arT-1.5)/0.7,sweep=(G.arT/1.5)*W*1.2-W*0.1,y0=sY(0);
+    for(let gxp=14;gxp<W;gxp+=26)for(let gyp=y0-4;gyp<y0+H*0.13;gyp+=20){const br=clamp(1-Math.abs(gxp-sweep)/90,0,1);
+      x.fillStyle='rgba(31,95,224,'+(a*(0.25+0.75*br)).toFixed(2)+')';x.beginPath();x.arc(gxp,gyp,1.4+1.6*br,0,TAU);x.fill();}
+  }
+  // height markers every 10 cups. Upcoming ones are estimated from the cup height, so they show as soon as that level is on screen.
+  for(let n=10;n<=G.cups+10;n+=10){
+    const my=n<=G.cups?G.markerY[n]:G.topY+(n-G.cups)*G.cupH;if(my==null)continue;
+    const yy=sY(my);if(yy<-40||yy>H+40)continue;
+    const i=n/10-1,label=n===20&&G.pastryOn?'Free pastry here!':i<4?LABELS[i]:'After hours',reached=n<=G.cups;
+    x.save();x.setLineDash([8,8]);x.strokeStyle=reached?'rgba(31,95,224,.75)':'rgba(31,95,224,.45)';x.lineWidth=1.5;x.beginPath();x.moveTo(0,yy);x.lineTo(W,yy);x.stroke();x.restore();
+    x.fillStyle=reached?COL.canary:'rgba(255,255,255,.92)';x.beginPath();x.moveTo(10,yy-34);x.lineTo(164,yy-34);x.lineTo(148,yy-17);x.lineTo(164,yy);x.lineTo(10,yy);x.closePath();x.fill();
+    x.fillStyle=COL.ink;x.textAlign='left';x.textBaseline='alphabetic';
+    x.font='800 15px "Plus Jakarta Sans",sans-serif';x.fillText(n+' cups',20,yy-18);x.font='700 11.5px "Plus Jakarta Sans",sans-serif';x.fillText(label,20,yy-5);
+  }
+  // sky objects
+  for(const o of G.sky)drawSkyObject(x,o,t,night);
+  // tower
+  if(G.items.length){const b=G.items[0];x.fillStyle='rgba(0,0,0,.38)';x.beginPath();x.ellipse(b.x+3,sY(0)+5,b.w*0.62,b.w*0.15,0,0,TAU);x.fill();}
+  for(const it of G.items){
+    let ddx=swayDx(it),rot=G.sway.x*0.0035*(G.topY>0?(it.y+it.h)/G.topY:0);
+    if(TYPES[it.type].pastry){ddx+=Math.sin(t*9+it.jig)*1.2;rot+=Math.sin(t*9+it.jig)*0.025;}
+    drawItem(x,it,it.x+ddx,sY(it.y),rot,false,t);
+  }
+  for(const it of G.loose)drawItem(x,it,it.x,sY(it.y),it.rot,false,t);
+  if(G.falling){const f=G.falling;x.fillStyle='rgba(0,0,0,.18)';const top=G.items[G.items.length-1];const shY=top?sY(top.y+top.h):sY(0);
+    x.beginPath();x.ellipse(f.x,shY+3,f.w*0.45,f.w*0.1,0,0,TAU);x.fill();drawItem(x,f,f.x,sY(f.y),f.rot,false,t);}
+  // crane rail, trolley, rope, hanging item
+  x.strokeStyle=COL.brass;x.lineWidth=6;x.lineCap='round';x.beginPath();x.moveTo(W*0.06,G.railY);x.lineTo(W*0.94,G.railY);x.stroke();
+  x.strokeStyle='rgba(59,42,32,.6)';x.lineWidth=2;x.beginPath();x.moveTo(W*0.06,G.railY+5);x.lineTo(W*0.94,G.railY+5);x.stroke();
+  x.fillStyle=COL.espresso;rr(x,W/2-18,G.railY-8,36,16,4);x.fill();x.fillStyle=COL.brass;x.beginPath();x.arc(W/2,G.railY,4,0,TAU);x.fill();
+  if(G.hanging&&G.state==='play'){
+    const hp=hangPos();x.strokeStyle='rgba(243,233,215,.9)';x.lineWidth=2;x.beginPath();x.moveTo(W/2,G.railY);x.lineTo(hp.x,hp.y);x.stroke();
+    x.save();x.translate(hp.x,hp.y);x.rotate(hp.th*0.35);x.fillStyle=COL.brass;x.beginPath();x.arc(0,-2,4,0,TAU);x.fill();drawItem(x,G.hanging,0,G.hanging.h,0,true,t);x.restore();
+  }
+  // golden-hour glow on the way up
+  if(golden>0.02){x.fillStyle='rgba(255,190,90,'+(0.16*golden).toFixed(3)+')';x.fillRect(-20,-20,W+40,H+40);}
+  // weather
+  if(G.rain){x.strokeStyle='rgba(90,120,170,.5)';x.lineWidth=1.2;x.beginPath();for(const d of G.rain){x.moveTo(d.x,d.y);x.lineTo(d.x+G.wind.cur*8,d.y+d.l);}x.stroke();}
+  if(G.snow){x.fillStyle='rgba(243,233,215,.85)';for(const d of G.snow){x.beginPath();x.arc(d.x,d.y,d.r,0,TAU);x.fill();}}
+  // confetti
+  for(const pt of G.particles){const a=clamp((pt.life-pt.t)/0.4,0,1);x.save();x.globalAlpha=a;x.translate(pt.x,pt.y);x.rotate(pt.rot);x.fillStyle=pt.col;x.fillRect(-pt.w/2,-pt.h/2,pt.w,pt.h);x.restore();}
+  // floating popups
+  x.textAlign='center';x.textBaseline='alphabetic';
+  for(const pp of G.popups){
+    const a=1-pp.t/pp.dur,yy=sY(pp.y)-22-pp.t*45;
+    x.font=pp.small?'700 13px "Plus Jakarta Sans",sans-serif':pp.big?'800 26px "Plus Jakarta Sans",sans-serif':'800 20px "Plus Jakarta Sans",sans-serif';
+    x.lineWidth=5;x.strokeStyle='rgba(255,255,255,'+(0.9*a).toFixed(2)+')';x.strokeText(pp.text,pp.x,yy);
+    x.fillStyle=pp.big?'rgba(31,95,224,'+a.toFixed(2)+')':'rgba(34,48,74,'+a.toFixed(2)+')';x.fillText(pp.text,pp.x,yy);
+  }
+  x.restore();
+  postFx(x,t,0.55);
+  if(G.light.a>0){x.fillStyle='rgba(243,233,215,'+(G.light.a*0.8).toFixed(2)+')';x.fillRect(0,0,W,H);}
+}
+
+/* ============================================================
+   11. Input and main loop
+   ============================================================ */
+gC.addEventListener('pointerdown',e=>{e.preventDefault();release();});
+window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='Enter')&&document.body.dataset.screen==='game'){e.preventDefault();release();}});
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
+  const scr=document.body.dataset.screen;
+  if(scr==='home')drawHome(dt);else if(scr==='game'){updateGame(dt);drawGame();}else if(scr==='name'||scr==='ticket')drawIntro(dt);
+  requestAnimationFrame(loop);
+}
+/* ============================================================
+   12. Toast
+   ============================================================ */
+let toastTimer=0;
+function toast(text){const t=$('toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+
+/* ============================================================
+   13. Share card: GIF encoder (GIF89a, global palette, LZW)
+   ============================================================ */
+function ByteWriter(){
+  let a=new Uint8Array(1<<16),n=0;
+  return {byte(b){if(n>=a.length){const t=new Uint8Array(a.length*2);t.set(a);a=t;}a[n++]=b;},
+    bytes(list){for(const b of list)this.byte(b);},result(){return a.subarray(0,n);}};
+}
+/* Classic LZW with 8-bit min code size, clear at 4096 entries, packed into 255-byte sub-blocks. */
+function lzwEncode(ind,bw){
+  const CLEAR=256,EOI=257;let codeSize=9,next=258;const dict=new Map();
+  let acc=0,bits=0;const buf=[];
+  const emit=c=>{acc|=c<<bits;bits+=codeSize;while(bits>=8){buf.push(acc&255);acc>>>=8;bits-=8;}};
+  emit(CLEAR);let prefix=ind[0];
+  for(let i=1;i<ind.length;i++){
+    const c=ind[i],key=(prefix<<8)|c,e=dict.get(key);
+    if(e!==undefined){prefix=e;continue;}
+    emit(prefix);
+    if(next<4096){dict.set(key,next++);if(next>(1<<codeSize)&&codeSize<12)codeSize++;}
+    else{emit(CLEAR);dict.clear();next=258;codeSize=9;}
+    prefix=c;
+  }
+  emit(prefix);emit(EOI);if(bits>0)buf.push(acc&255);
+  for(let i=0;i<buf.length;i+=255){const n=Math.min(255,buf.length-i);bw.byte(n);for(let j=0;j<n;j++)bw.byte(buf[i+j]);}
+}
+/* frames: [{data:Uint8ClampedArray (RGBA), delay:hundredths}] → Blob. Palette = the 256 most used 15-bit colour bins. */
+async function encodeGif(w,h,frames,onProgress){
+  const bins=new Map();
+  for(const f of frames){const d=f.data;for(let i=0;i<d.length;i+=8){
+    const k=((d[i]>>3)<<10)|((d[i+1]>>3)<<5)|(d[i+2]>>3);let b=bins.get(k);if(!b){b=[0,0,0,0];bins.set(k,b);}b[0]++;b[1]+=d[i];b[2]+=d[i+1];b[3]+=d[i+2];}}
+  const top=[...bins.values()].sort((a,b)=>b[0]-a[0]).slice(0,256),np=top.length,pal=new Uint8Array(768);
+  top.forEach((b,i)=>{pal[i*3]=b[1]/b[0];pal[i*3+1]=b[2]/b[0];pal[i*3+2]=b[3]/b[0];});
+  const cache=new Int16Array(32768).fill(-1);
+  const idx=(r,g,b)=>{const k=((r>>3)<<10)|((g>>3)<<5)|(b>>3);let c=cache[k];if(c>=0)return c;let best=0,bd=1e9;
+    for(let i=0;i<np;i++){const dr=pal[i*3]-r,dg=pal[i*3+1]-g,db=pal[i*3+2]-b,dd=dr*dr+dg*dg+db*db;if(dd<bd){bd=dd;best=i;}}cache[k]=best;return best;};
+  const bw=ByteWriter();
+  bw.bytes([71,73,70,56,57,97,w&255,w>>8,h&255,h>>8,0xF7,0,0]);bw.bytes(pal);
+  bw.bytes([0x21,0xFF,0x0B,78,69,84,83,67,65,80,69,50,46,48,3,1,0,0,0]); // NETSCAPE2.0 loop forever
+  for(let fi=0;fi<frames.length;fi++){
+    const f=frames[fi],d=f.data,N=w*h,ind=new Uint8Array(N);
+    for(let p=0,q=0;p<N;p++,q+=4)ind[p]=idx(d[q],d[q+1],d[q+2]);
+    bw.bytes([0x21,0xF9,4,0x04,f.delay&255,f.delay>>8,0,0,0x2C,0,0,0,0,w&255,w>>8,h&255,h>>8,0,8]);
+    lzwEncode(ind,bw);bw.byte(0);
+    if(onProgress)onProgress((fi+1)/frames.length);
+    await new Promise(r=>setTimeout(r,0));
+  }
+  bw.byte(0x3B);
+  return new Blob([bw.result()],{type:'image/gif'});
+}
+
+/* ============================================================
+   14. Share card: render the run, build the GIF, pick a destination
+   ============================================================ */
+const SHARE={fmt:'story',blob:null,url:null,run:null,busy:false,seq:0};
+const DESTS=[
+  {id:'ig-story',name:'Instagram',sub:'Story',fmt:'story',ic:'IG'},{id:'ig-feed',name:'Instagram',sub:'Feed',fmt:'feed',ic:'IG'},
+  {id:'tt',name:'TikTok',sub:'Post',fmt:'story',ic:'TT'},{id:'fb-story',name:'Facebook',sub:'Story',fmt:'story',ic:'FB'},
+  {id:'fb-feed',name:'Facebook',sub:'Feed',fmt:'feed',ic:'FB'}
+];
+/* Snapshot of a finished run, taken in finishRun(). */
+function captureRun(rank){
+  const passed=[...G.passed],badges=[];
+  for(const r of session.codesThisRun)badges.push(r.label+' unlocked');
+  if(rank===1&&G.cups>0)badges.push('Top of the board this week');else if(G.cups>0)badges.push('#'+rank+' this week');
+  if(passed.length)badges.push('Passed '+passed[0]+(passed.length>1?' and '+(passed.length-1)+' more':''));
+  if(G.bestStreak>=3)badges.push('Perfect streak ×'+G.bestStreak);
+  const seed=Date.now()%100000,prize=session.codesThisRun.length?session.codesThisRun[0].label:null;
+  return {name:session.name,score:G.score,cups:G.cups,items:G.history.slice(),badges:badges.slice(0,3),prize,celebrate:session.codesThisRun.length>0||passed.length>0||rank===1,seed,
+    caption:(prize?'I just won a '+prize.replace(/^Free /i,'free ')+' from Mainstay Cafe. ':'I just stacked '+plural(G.cups,'cup','cups')+' at Mainstay Cafe. ')+'Join the challenge: download Mainstay Stack and play with your next coffee. @mainstaycafe #MainstayStack'};
+}
+function seededRand(seed){let s=seed||1;return()=>{s=(s*16807)%2147483647;return (s-1)/2147483646;};}
+const easeBack=p=>1+2.3*Math.pow(p-1,3)+1.3*Math.pow(p-1,2);
+/* Frame plan: items drop in one by one, then badges pop, then a long hold. */
+function shareFrames(run,fmt){
+  const story=fmt==='story',w=story?324:400,h=story?576:400;
+  const n=run.items.length,steps=Math.min(n,12),fr=[];
+  for(let k=0;k<steps;k++)fr.push({shown:Math.round(n*k/steps),air:true,bt:[],ct:-1,delay:9});
+  fr.push({shown:n,air:false,bt:[],ct:-1,delay:35});
+  const nb=Math.min(run.badges.length,story?3:2);
+  for(let i=0;i<nb;i++)for(const p of [0.45,1]){
+    fr.push({shown:n,air:false,bt:run.badges.map((_,j)=>j<i?1:j===i?p:0),ct:run.celebrate?(i*2+(p===1?1:0))*0.11:-1,delay:p===1?22:7});
+  }
+  fr.push({shown:n,air:false,bt:run.badges.map(()=>1),ct:run.celebrate?nb*0.22+0.25:-1,delay:190});
+  return {w,h,frames:fr,nb};
+}
+/* Shrink the current font until the text fits maxW. */
+function fitText(x,text,maxW){
+  let m=x.measureText(text).width;if(m<=maxW)return;const p=x.font.match(/^(\S+)\s+(\d+)px\s+(.*)$/);if(!p)return;let size=+p[2];
+  while(m>maxW&&size>9){size-=1;x.font=p[1]+' '+size+'px '+p[3];m=x.measureText(text).width;}
+}
+function drawShareFrame(x,w,h,run,f,items,cupW,conf,nb){
+  const story=h>w,pad=Math.round(w*0.055);
+  x.setTransform(1,0,0,1,0,0);x.fillStyle=COL.paper;x.fillRect(0,0,w,h);
+  // 1. cafe photo, table top at ~69% (story) / 62% (feed), with cream washes top and bottom
+  const s=SPR.cafe;let baseY=h*(story?0.69:0.62);
+  if(s&&s.ok){const sc=Math.max(w/s.w,h/s.h),dw=s.w*sc,dh=s.h*sc,oy=Math.min(0,baseY-TABLE_FRAC*dh);x.drawImage(s.src,(w-dw)/2,oy,dw,dh);baseY=oy+TABLE_FRAC*dh;}
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(255,251,242,.98)');g.addColorStop(story?.3:.28,'rgba(255,251,242,.8)');g.addColorStop(story?.58:.5,'rgba(255,251,242,.12)');g.addColorStop(1,'rgba(255,251,242,.98)');
+  x.fillStyle=g;x.fillRect(0,0,w,h);
+  // 2. logo wordmark (the only serif) and the headline
+  x.textAlign='center';x.textBaseline='alphabetic';x.fillStyle=COL.navy;
+  const lg=SPR.logo,lh=Math.round(w*(story?0.24:0.2));
+  if(lg&&lg.ok){const lw=lh*lg.w/lg.h;x.drawImage(lg.src,(w-lw)/2,pad*0.6,lw,lh);}
+  else{x.font='700 '+Math.round(w*0.042)+'px "Libre Baskerville",serif';x.fillText('M A I N S T A Y   C A F E',w/2,pad+Math.round(w*0.045));}
+  const prize=run.prize?run.prize.replace(/^Free /i,'free '):null;
+  let hy=pad*0.6+lh;
+  if(story){
+    const hl=prize?['I just won a',prize+'!','from Mainstay Cafe']:['I just stacked',plural(run.cups,'cup','cups')+'!','at Mainstay Cafe'];
+    hy+=Math.round(w*0.085);x.fillStyle=COL.ink;x.font='800 '+Math.round(w*0.052)+'px "Plus Jakarta Sans",sans-serif';x.fillText(hl[0],w/2,hy);
+    hy+=Math.round(w*0.09);x.fillStyle=COL.sapphire;x.font='800 '+Math.round(w*0.082)+'px "Plus Jakarta Sans",sans-serif';fitText(x,hl[1],w-pad*2);x.fillText(hl[1],w/2,hy);
+    hy+=Math.round(w*0.065);x.fillStyle=COL.ink;x.font='800 '+Math.round(w*0.052)+'px "Plus Jakarta Sans",sans-serif';x.fillText(hl[2],w/2,hy);
+  }else{
+    const hl=prize?'I just won a '+prize+'!':'I just stacked '+plural(run.cups,'cup','cups')+'!';
+    hy+=Math.round(w*0.085);x.fillStyle=COL.sapphire;x.font='800 '+Math.round(w*0.062)+'px "Plus Jakarta Sans",sans-serif';fitText(x,hl,w-pad*2);x.fillText(hl,w/2,hy);
+  }
+  hy+=Math.round(w*0.06);x.fillStyle=COL.ink2;x.font='800 '+Math.round(w*0.038)+'px "Plus Jakarta Sans",sans-serif';
+  x.fillText(run.name+'  ·  '+plural(run.cups,'cup','cups')+'  ·  '+run.score+' pts',w/2,hy);
+  // 3. the stack (camera follows the top, bottom fades into the table)
+  const clipTop=hy+Math.round(w*0.03),avail=baseY-clipTop-8;
+  let y=0;const pos=[];for(let i=0;i<f.shown;i++){pos.push(y);y+=items[i].h;}
+  const off=Math.max(0,y-avail);
+  x.save();x.beginPath();x.rect(0,clipTop,w,baseY-clipTop+8);x.clip();
+  if(f.shown>0){x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.ellipse(w/2+2,baseY+3,items[0].w*0.6,items[0].w*0.14,0,0,TAU);x.fill();}
+  for(let i=0;i<f.shown;i++){const it=items[i];drawItem(x,it,w/2+it.offR*cupW,baseY+off-pos[i],0,false,0);}
+  if(f.air&&items[f.shown]){const it=items[f.shown];drawItem(x,it,w/2+it.offR*cupW*0.5,baseY+off-y-it.h*0.9,0.06,false,0);}
+  if(off>0){const g2=x.createLinearGradient(0,baseY-70,0,baseY+8);g2.addColorStop(0,'rgba(255,251,242,0)');g2.addColorStop(1,'rgba(255,251,242,.95)');x.fillStyle=g2;x.fillRect(0,baseY-70,w,78);}
+  x.restore();
+  if(off>0){x.fillStyle=COL.ink2;x.textAlign='center';x.font='800 '+Math.round(w*0.034)+'px "Plus Jakarta Sans",sans-serif';x.fillText(run.cups+' cups tall',w/2,baseY+Math.round(w*0.03));}
+  // 4. badge pills under the table
+  const pillH=Math.round(w*(story?0.085:0.07)),gap=story?8:6;let py=baseY+(off>0?Math.round(w*0.05):Math.round(w*0.03));
+  x.textAlign='center';x.textBaseline='middle';
+  for(let i=0;i<nb;i++){
+    const p=f.bt[i]||0;if(p<=0){py+=pillH+gap;continue;}
+    const text=run.badges[i];x.font='800 '+Math.round(pillH*0.46)+'px "Plus Jakarta Sans",sans-serif';
+    const tw=x.measureText(text).width+pillH*0.9,sc=easeBack(p);
+    x.save();x.globalAlpha=clamp(p*1.4,0,1);x.translate(w/2,py+pillH/2);x.scale(sc,sc);
+    x.fillStyle=i===0?COL.canary:'#fff';rr(x,-tw/2,-pillH/2,tw,pillH,pillH/2);x.fill();
+    x.strokeStyle=i===0?'#F2D600':COL.sapphire;x.lineWidth=1.5;x.stroke();
+    x.fillStyle=i===0?COL.navy:COL.ink;x.fillText(text,0,1);x.restore();
+    py+=pillH+gap;
+  }
+  x.textBaseline='alphabetic';
+  // 5. confetti
+  if(conf&&f.ct>=0){const T=f.ct;for(const c of conf){const cx=c.x*w+c.vx*T,cy=c.y*h+c.vy*T+420*T*T;if(cy>h)continue;
+    x.save();x.globalAlpha=clamp(1.6-T,0,1);x.translate(cx,cy);x.rotate(c.rot+T*c.rv);x.fillStyle=c.col;x.fillRect(-c.w/2,-c.h/2,c.w,c.h);x.restore();}}
+  // 6. footer: the call to action and the handle
+  const fh=Math.round(w*0.1),fy=h-pad-fh-Math.round(w*0.065);
+  x.fillStyle=COL.sapphire;rr(x,pad,fy,w-pad*2,fh,fh/2);x.fill();
+  x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+Math.round(w*0.038)+'px "Plus Jakarta Sans",sans-serif';
+  const cta='Join the challenge  →  Download Mainstay Stack';fitText(x,cta,w-pad*2-24);x.fillText(cta,w/2,fy+fh/2+1);
+  x.textBaseline='alphabetic';x.fillStyle=COL.ink;x.font='800 '+Math.round(w*0.036)+'px "Plus Jakarta Sans",sans-serif';x.fillText('@mainstaycafe  ·  #MainstayStack',w/2,h-pad*0.8);
+}
+async function buildShare(fmt){
+  const run=SHARE.run;if(!run)return;
+  const seq=++SHARE.seq,pv=$('sharePreview');pv.innerHTML='<div class="spinner"></div>';$('shareGo').disabled=true;$('shareSave').disabled=true;SHARE.busy=true;
+  try{await document.fonts.ready;}catch(e){}
+  const {w,h,frames,nb}=shareFrames(run,fmt);
+  const probe=run.items.map(r=>makeItem(r.type,100,r.sprite)),units=probe.reduce((a,it)=>a+it.h/100,0)||1;
+  const avail=h>w?h*0.4:h*0.3,cupW=clamp(avail/units,w*0.1,w*0.17);
+  const items=run.items.map(r=>Object.assign(makeItem(r.type,cupW,r.sprite),{offR:r.offR}));
+  const rnd2=seededRand(run.seed),cols=[COL.sapphire,COL.canary,'#FF8FAB','#7FE0B0','#FFB86B'];
+  const conf=run.celebrate?Array.from({length:REDUCED?25:70},()=>({x:0.5+(rnd2()-0.5)*0.3,y:0.55,vx:(rnd2()-0.5)*520,vy:-200-rnd2()*380,rot:rnd2()*TAU,rv:(rnd2()-0.5)*12,w:4+rnd2()*4,h:6+rnd2()*6,col:cols[Math.floor(rnd2()*cols.length)]})):null;
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});
+  const data=[];
+  for(const f of frames){drawShareFrame(x,w,h,run,f,items,cupW,conf,nb);let id;try{id=x.getImageData(0,0,w,h);}catch(e){pv.innerHTML='<p class="empty">The share card needs the game served over http (or GitHub Pages), not opened from a file.</p>';SHARE.busy=false;return;}data.push({data:id.data,delay:f.delay});await new Promise(r=>setTimeout(r,0));if(seq!==SHARE.seq)return;}
+  const blob=await encodeGif(w,h,data);if(seq!==SHARE.seq)return;
+  if(SHARE.url){try{URL.revokeObjectURL(SHARE.url);}catch(e){}}
+  SHARE.blob=blob;SHARE.url=URL.createObjectURL(blob);
+  const im=new Image();im.alt='Your Mainstay Stack share card';im.src=SHARE.url;pv.innerHTML='';pv.appendChild(im);
+  $('shareGo').disabled=false;$('shareSave').disabled=false;SHARE.busy=false;
+}
+function openShare(){
+  if(!SHARE.run){toast('Finish a run first.');return;}
+  $('shareCaption').textContent=SHARE.run.caption;
+  $('shareActions').style.display='';$('sharePick').style.display='none';$('shareDone').style.display='none';
+  openPanel('p-share');buildShare(SHARE.fmt);
+}
+function setShareFmt(fmt){SHARE.fmt=fmt;$('shareFmt').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.fmt===fmt));}
+$('shareFmt').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(SHARE.fmt===b.dataset.fmt)return;setShareFmt(b.dataset.fmt);buildShare(SHARE.fmt);}));
+$('shareGo').addEventListener('click',()=>{
+  $('shareDest').innerHTML=DESTS.map(d=>`<button data-dest="${d.id}"><span class="ic">${d.ic}</span><span>${d.name}<small>${d.sub}</small></span></button>`).join('');
+  $('shareDest').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>shareTo(DESTS.find(d=>d.id===b.dataset.dest))));
+  $('shareActions').style.display='none';$('sharePick').style.display='';
+});
+$('shareBack').addEventListener('click',()=>{$('sharePick').style.display='none';$('shareDone').style.display='none';$('shareActions').style.display='';});
+function downloadGif(){if(!SHARE.url)return;const a=document.createElement('a');a.href=SHARE.url;a.download='mainstay-stack-'+SHARE.fmt+'.gif';document.body.appendChild(a);a.click();a.remove();}
+$('shareSave').addEventListener('click',()=>{downloadGif();toast('GIF saved');});
+async function shareTo(dest){
+  if(SHARE.fmt!==dest.fmt){setShareFmt(dest.fmt);await buildShare(dest.fmt);}
+  else if(SHARE.busy){toast('One moment, your card is still rendering.');return;}
+  if(!SHARE.blob)return;
+  const file=new File([SHARE.blob],'mainstay-stack.gif',{type:'image/gif'}),text=SHARE.run.caption;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text,title:'Mainstay Stack'});toast('Shared to '+dest.name+' '+dest.sub);return;}
+    catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  downloadGif();
+  $('sharePick').style.display='none';
+  const d=$('shareDone');d.style.display='';
+  d.innerHTML=`<div class="shareDone"><b>Ready for ${escapeHtml(dest.name)} ${escapeHtml(dest.sub)}</b><span class="muted">Your GIF is saved. Open ${escapeHtml(dest.name)}, pick it from your photos and post. (Simulated here: the real app opens ${escapeHtml(dest.name)} directly.)</span></div>
+    <div class="row"><button class="btn secondary" id="copyCap">Copy caption</button><button class="btn secondary" id="shareAgain">Share elsewhere</button></div>`;
+  $('copyCap').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(text);toast('Caption copied');}catch(e){toast('Copy the caption above');}});
+  $('shareAgain').addEventListener('click',()=>{d.style.display='none';$('sharePick').style.display='';});
+}
+$('shareBtn').addEventListener('click',openShare);
+
+/* ============================================================
+   15. Admin page (mock: clickable UI only, nothing is applied)
+   ============================================================ */
+let adminFrom='s-home';
+function openAdmin(){
+  adminFrom=document.body.dataset.screen==='admin'?adminFrom:'s-'+document.body.dataset.screen;
+  const cur=activePromo();
+  document.querySelectorAll('[data-drop-sw]').forEach(b=>b.classList.toggle('on',b.dataset.dropSw===cur));
+  document.querySelectorAll('[data-drop-tag]').forEach(t=>{const k=t.dataset.dropTag,live=k===cur;t.textContent=live?'Live now':k==='pastry'?'Default':'Scheduled';t.classList.toggle('live',live);});
+  $('adminWeek').textContent=weekRange();
+  showScreen('s-admin');
+}
+$('adminLink').addEventListener('click',openAdmin);
+$('adminBack').addEventListener('click',()=>{const to=adminFrom==='s-game'||adminFrom==='s-admin'?'s-home':adminFrom;showScreen(session.ticket||to!=='s-home'?to:'s-name');if(to==='s-home'&&session.ticket)startHome();});
+document.querySelectorAll('#s-admin .sw').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('on');b.setAttribute('aria-checked',b.classList.contains('on'));}));
+document.querySelectorAll('#s-admin .seg').forEach(seg=>seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{seg.querySelectorAll('button').forEach(o=>o.classList.toggle('on',o===b));})));
+document.querySelectorAll('#s-admin .stepper').forEach(s=>{
+  const [minus,plus]=s.querySelectorAll('button'),out=s.querySelector('b'),min=+s.dataset.min,max=+s.dataset.max,step=+(s.dataset.step||1);
+  minus.addEventListener('click',()=>{out.textContent=Math.max(min,+out.textContent-step);});
+  plus.addEventListener('click',()=>{out.textContent=Math.min(max,+out.textContent+step);});
+});
+document.querySelectorAll('#s-admin .slider').forEach(r=>r.addEventListener('input',()=>{r.nextElementSibling.textContent=r.value+(r.dataset.unit||'');}));
+document.querySelectorAll('.mock[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+$('adminNewDrop').addEventListener('click',()=>$('adminDropForm').classList.add('show'));
+$('adminDropCancel').addEventListener('click',()=>$('adminDropForm').classList.remove('show'));
+function promoDays(){
+  const a=new Date($('promoStart').value),b=new Date($('promoEnd').value),d=Math.round((b-a)/864e5);
+  $('promoDays').textContent=isNaN(d)||d<0?'—':d>=14&&d%7===0?(d/7)+' weeks':plural(d,'day','days');
+}
+$('promoStart').addEventListener('change',promoDays);$('promoEnd').addEventListener('change',promoDays);promoDays();
+
+/* ---------- Logo lockup (badge + serif wordmark + tagline), used on every card ---------- */
+const LOGO_HTML='<div class="logo"><img src="assets/logo.png" alt="Mainstay Cafe. Come for the coffee, stay for the company."></div>';
+document.querySelectorAll('.brand').forEach(el=>{el.innerHTML=LOGO_HTML;});
+
+(function init(){
+  const saved=store.get('ms_name','');
+  if(typeof saved==='string'&&saved){nameInput.value=saved;$('changeName').style.display='block';}
+  renderDropOpts();
+  if(location.hash==='#admin')openAdmin();
+  loadAssets().catch(()=>{});
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
