@@ -106,6 +106,7 @@ input.code{letter-spacing:.35em;text-transform:uppercase;text-align:center;font-
 .dropBanner.show{display:flex}
 .dropBanner img{width:62px;height:62px;border-radius:14px;object-fit:contain;background:#fff;padding:4px;border:2px solid var(--sapphire);flex:none}
 .dropBanner .t{font-size:12px;color:var(--sapphire);letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+.dropBanner .t.drop{font-size:14.5px;letter-spacing:0;text-transform:none;line-height:1.25;margin-bottom:2px}
 .dropBanner p{font-size:15px;line-height:1.35;font-weight:600}
 /* Leaderboard: podium for the top 3, list for the rest */
 .board{margin-top:24px}
@@ -367,8 +368,8 @@ body[data-screen="admin"] .saveBar{display:block}
     <button class="btn big" id="playBtn">Play now</button>
     <div class="how">
       <span><span class="n">1</span>Tap to drop. Stack them high.</span>
-      <span id="howPromo"><span class="n">2</span>Hit 20 cups and a pastry is on us.</span>
-      <span><span class="n">3</span>Top of the board on Monday wins a free coffee.</span>
+      <span id="howPromo"><span class="n">2</span>Stack 20 cups in one run to win a free pastry.</span>
+      <span><span class="n">3</span>Top the Monday leaderboard to claim a free coffee.</span>
     </div>
     <div class="dropBanner" id="homeDrop"><img id="homeDropImg" alt=""><div><div class="t" id="homeDropTitle">This week's promo</div><p id="homeDropText"></p></div></div>
     <button class="btn ghost" id="rewardsBtn">My rewards</button>
@@ -735,8 +736,8 @@ function mountQRs(container){
   });
 }
 const DROPS={
-  matcha:{key:'matcha',title:'Matcha Latte',short:'Matcha Latte',sub:'New on the menu',prefix:'MS-MATCHA',label:'Free Matcha Latte',alert:'Matcha Latte is new on the menu. Land it on your 10th stack and get it for free.'},
-  plushie:{key:'plushie',title:'Mainstay cup plush keychain',short:'Cup plushie',sub:'Limited edition merch',prefix:'MS-PLUSH',label:'Free cup plushie',alert:'Limited edition Mainstay cup plush keychain. Land it on your 10th stack and get it for free.'}
+  matcha:{key:'matcha',title:'Matcha Latte',short:'Matcha Latte',sub:'New on the menu',prefix:'MS-MATCHA',label:'Free Matcha Latte',alertTitle:'New Drop Alert: Matcha Latte 🎉',alert:'Fresh on the menu. Get it for free when you land the 10th stack!'},
+  plushie:{key:'plushie',title:'Mainstay cup plush keychain',short:'Cup plushie',sub:'Limited edition merch',prefix:'MS-PLUSH',label:'Free cup plushie',alertTitle:'Limited edition Mainstay cup plush keychain 🎉',alert:'Stack your way to the 10th tier and win it on the house.'}
 };
 const PASTRY_PROMO={key:'pastry',title:'Free pastry',sub:'Stack 20 cups in one run',alert:'Stack 20 cups in one run and your next pastry is on the house.'};
 /* One promo at a time: the free pastry (default) or a single drop. Never both. */
@@ -958,9 +959,9 @@ $('sampleCode').addEventListener('click',()=>{codeInput.value=randCode('MS').rep
 function renderHomeDrop(){
   const d=activeDrop(),el=$('homeDrop'),im=$('homeDropImg'),s=SPR[d?d.key:'croissant'];
   if(s&&s.ok&&s.url){im.src=s.url;im.style.display='';}else im.style.display='none';
-  $('homeDropTitle').textContent=d?'New drop alert':'This week\'s promo';
+  $('homeDropTitle').textContent=d?d.alertTitle:'This week\'s promo';$('homeDropTitle').classList.toggle('drop',!!d);
   $('homeDropText').textContent=d?d.alert:PASTRY_PROMO.alert;
-  $('howPromo').innerHTML='<span class="n">2</span>'+(d?'Land the '+escapeHtml(d.short.toLowerCase())+' on your 10th stack. It\'s free.':'Hit 20 cups and a pastry is on us.');
+  $('howPromo').innerHTML='<span class="n">2</span>'+(d?'Land the '+escapeHtml(d.key==='matcha'?d.short:d.short.toLowerCase())+' on your 10th stack to win it for free.':'Stack 20 cups in one run to win a free pastry.');
   el.classList.add('show');
 }
 function goHome(){

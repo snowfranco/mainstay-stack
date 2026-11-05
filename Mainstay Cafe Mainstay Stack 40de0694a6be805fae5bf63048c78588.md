@@ -33,7 +33,7 @@
 
 ## Prototype update: decisions made while building
 
-The prototype is a single-page web game (`index.html` plus `assets/`) published from the `main` branch of github.com/snowfranco/mainstay-stack. It runs on phones and desktop, needs no install, and simulates the AR camera, the POS codes and the barista scan.
+The prototype is a single-page web game (`index.html` plus `assets/`) published from the `main` branch of github.com/snowabraxas/mainstay-stack. It runs on phones and desktop, needs no install, and simulates the AR camera, the POS codes and the barista scan.
 
 ### Brand and look
 
@@ -53,7 +53,7 @@ The prototype is a single-page web game (`index.html` plus `assets/`) published 
 11. **Pastries are almost cup-sized** so they have impact. Drop items (matcha, plushie) are cut out and shown on a canary card with a DROP tag.
 12. **Sound.** All sound is synthesised in the browser: drop and perfect chimes, spill, start and end jingles, bird chirps, a rain bed that fades in and out, thunder, gusts, and a prize celebration. Sound starts after the first tap, as browsers require.
 13. **One promo at a time (bug fix).** Earlier the free pastry stayed active during a matcha or plushie drop, so a player could earn both. Now a live drop replaces the pastry goal for the run.
-14. **Copy** is short and upbeat. The homepage drop card carries a "New drop alert" label and the text just describes the drop: "Matcha Latte is new on the menu. Land it on your 10th stack and get it for free." "Timber! The tower tipped." "So close! Next order, next chance."
+14. **Copy** is short and upbeat, and the homepage steps and the drop card no longer repeat each other. Steps: "Tap to drop. Stack them high." / "Land the Matcha Latte on your 10th stack to win it for free." / "Top the Monday leaderboard to claim a free coffee." Drop card: "New Drop Alert: Matcha Latte 🎉 Fresh on the menu. Get it for free when you land the 10th stack!" and "Limited edition Mainstay cup plush keychain 🎉 Stack your way to the 10th tier and win it on the house." "Timber! The tower tipped." "So close! Next order, next chance."
 
 ### Leaderboard and rewards
 
